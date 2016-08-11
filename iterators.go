@@ -27,28 +27,48 @@ func IteratorSkipUntil(iter ItemIterator, val int32) {
 	}
 }
 
-type varintDeltaIterator struct {
+type emptyIterator struct{}
+
+var emptyIteratorInstance emptyIterator
+
+func NewEmptyIterator() ItemIterator {
+	return &emptyIteratorInstance
+}
+
+func (it *emptyIterator) HasMore() bool {
+	return false
+}
+
+func (it *emptyIterator) Peek() int32 {
+	panic(errors.New("Peek() called on empty iterator."))
+}
+
+func (it *emptyIterator) Next() int32 {
+	panic(errors.New("Next() called on empty iterator."))
+}
+
+type decompressingIterator struct {
 	pos            int
 	next, previous int32
 	bytes          []byte
 	more           bool
 }
 
-func NewSequenceIterator(bytes []byte) ItemIterator {
-	it := &varintDeltaIterator{bytes: bytes, more: true}
+func NewDecompressingIterator(bytes []byte) ItemIterator {
+	it := &decompressingIterator{bytes: bytes, more: true}
 	it.advance()
 	return it
 }
 
-func (it *varintDeltaIterator) HasMore() bool {
+func (it *decompressingIterator) HasMore() bool {
 	return it.more
 }
 
-func (it *varintDeltaIterator) Peek() int32 {
+func (it *decompressingIterator) Peek() int32 {
 	return it.next
 }
 
-func (it *varintDeltaIterator) Next() int32 {
+func (it *decompressingIterator) Next() int32 {
 	current := it.next
 
 	if it.more {
@@ -58,14 +78,14 @@ func (it *varintDeltaIterator) Next() int32 {
 	return current
 }
 
-func (it *varintDeltaIterator) SkipUntil(val int32) {
+func (it *decompressingIterator) SkipUntil(val int32) {
 	// allow inlining of the methods.
 	for it.HasMore() && it.Peek() < val {
 		it.advance()
 	}
 }
 
-func (it *varintDeltaIterator) advance() {
+func (it *decompressingIterator) advance() {
 	if it.pos < len(it.bytes) {
 		next, n := fastVarint32(it.bytes[it.pos:])
 		if n <= 0 {
@@ -97,16 +117,16 @@ func fastVarint32(buf []byte) (int32, int) {
 				return 0, -(i + 1) // overflow
 			}
 
-			ux = ux | uint32(b) << s
+			ux = ux | uint32(b)<<s
 			x := int32(ux >> 1)
-			if ux & 1 != 0 {
+			if ux&1 != 0 {
 				x = ^x
 			}
 
 			return x, i + 1
 		}
 
-		ux |= uint32(b & 0x7f) << s
+		ux |= uint32(b&0x7f) << s
 		s += 7
 	}
 
@@ -328,7 +348,7 @@ func NewDiffIterator(first, second ItemIterator) ItemIterator {
 
 func (it *diffIterator) HasMore() bool {
 	for it.first.HasMore() {
-		if ! it.second.HasMore() {
+		if !it.second.HasMore() {
 			return it.first.HasMore()
 		}
 

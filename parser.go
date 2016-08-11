@@ -1,8 +1,8 @@
 package main
 
 import (
-	"io"
 	"fmt"
+	"io"
 )
 
 type IteratorFactory func(string) ItemIterator
@@ -22,8 +22,8 @@ type Parser struct {
 func NewParser(r io.Reader, makeIter IteratorFactory) *Parser {
 	parser := &Parser{
 		makeIter: makeIter,
-		scanner: NewScanner(r),
-		next: buf{ILLEGAL, ""},
+		scanner:  NewScanner(r),
+		next:     buf{ILLEGAL, ""},
 	}
 	parser.buffer()
 	return parser
@@ -72,7 +72,8 @@ func (p *Parser) parseOrExpr() ItemIterator {
 func (p *Parser) parseAndExpr() ItemIterator {
 	result := p.parseWithoutExpr()
 
-	loop: for {
+loop:
+	for {
 		tok := p.peek()
 		switch tok {
 		case OP_AND:

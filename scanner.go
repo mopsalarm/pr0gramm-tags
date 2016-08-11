@@ -1,23 +1,23 @@
 package main
 
 import (
-	"unicode"
 	"bufio"
-	"io"
 	"bytes"
+	"io"
+	"unicode"
 )
 
 type Token string
 
 const (
 	ILLEGAL Token = "ILLEGAL"
-	EOF = "EOF"
+	EOF           = "EOF"
 
-	OP_AND = "AND"
-	OP_OR = "OR"
+	OP_AND     = "AND"
+	OP_OR      = "OR"
 	OP_WITHOUT = "WITHOUT"
 
-	PAR_OPEN = "("
+	PAR_OPEN  = "("
 	PAR_CLOSE = ")"
 
 	WORD = "WORD"

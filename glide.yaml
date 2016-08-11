@@ -11,3 +11,5 @@ import:
 - package: github.com/robfig/cron
   version: ~1.0.0
 - package: github.com/jessevdk/go-flags
+- package: github.com/Sirupsen/logrus
+  version: ~0.10.0

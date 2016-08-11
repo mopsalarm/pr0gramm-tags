@@ -36,4 +36,3 @@ func TestOrIteratorSomeMatching2(t *testing.T) {
 			iter(3, 4, 6, 7, 8, 9),
 			iter(1, 6, 7, 9, 10)))
 }
-

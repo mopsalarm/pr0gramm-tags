@@ -1,16 +1,21 @@
-package main;
+package main
 
 import (
-	"io"
-	"encoding/binary"
-	"fmt"
-	"time"
-	"os"
 	"bufio"
+	"encoding/binary"
 	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"time"
 )
 
 var byteOrder = binary.BigEndian
+
+type StoreState struct {
+	LastTagId  int
+	LastItemId int
+}
 
 func WriteCheckpoint(writer io.Writer, state StoreState, store IterStore) error {
 	{
@@ -63,7 +68,7 @@ func WriteCheckpointFile(filename string, state StoreState, store IterStore) err
 	defer fp.Close()
 
 	// wrap into a buffered writer
-	writer := bufio.NewWriterSize(fp, 16 * 1024)
+	writer := bufio.NewWriterSize(fp, 16*1024)
 
 	// write the store now.
 	WriteCheckpoint(writer, state, store)
@@ -117,7 +122,7 @@ func ReadCheckpoint(reader io.Reader, state *StoreState, store IterStore) error 
 			return err
 		}
 
-		store.PushInts(key, values)
+		store.Replace(key, values)
 	}
 
 	return nil
@@ -131,6 +136,5 @@ func ReadCheckpointFile(filename string, state *StoreState, store IterStore) err
 
 	defer fp.Close()
 
-	return ReadCheckpoint(bufio.NewReaderSize(fp, 16 * 1024), state, store)
+	return ReadCheckpoint(bufio.NewReaderSize(fp, 16*1024), state, store)
 }
-

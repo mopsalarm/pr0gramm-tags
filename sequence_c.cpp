@@ -67,7 +67,12 @@ extern "C" {
     }
 
     struct byte_view store_get(store st, uint32_t key) {
-        return get(st)[key].view();
+        auto&& iter = get(st).find(key);
+        if (iter != get(st).end()) {
+            return get(st)[key].view();
+        } else {
+            return byte_view{0, nullptr};
+        }
     }
 
     int store_keys(store st, uint32_t *keys, int n) {

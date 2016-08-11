@@ -21,7 +21,7 @@ func (it *sliceIter) Next() int32 {
 	return value
 }
 
-func iter(values... int32) ItemIterator {
+func iter(values ...int32) ItemIterator {
 	return &sliceIter{values: values}
 }
 
