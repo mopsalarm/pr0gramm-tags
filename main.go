@@ -22,7 +22,6 @@ import (
 	"sync/atomic"
 	"github.com/jessevdk/go-flags"
 	"runtime/pprof"
-	"math"
 )
 
 var umlautReplacer = strings.NewReplacer("ä", "ae", "ü", "ue", "ö", "oe", "ß", "ss", "-", " ")
@@ -83,8 +82,7 @@ func NewStoreBuilder() *StoreBuilder {
 	byteStore := NewCppStore()
 	return &StoreBuilder{
 		byteStore: byteStore,
-		// iterStore: &UncompressedStore{byteStore},
-		iterStore: &VarintStore{byteStore},
+		iterStore: &UncompressedStore{byteStore},
 	}
 }
 
@@ -110,15 +108,15 @@ func (sb *StoreBuilder) Build() IterStore {
 		defer bar.Finish()
 	}
 
-	optimizedStore := &VarintStore{sb.byteStore}
-	// optimizedStore := &UncompressedStore{sb.byteStore}
+	// optimizedStore := &VarintStore{sb.byteStore}
+	optimizedStore := &UncompressedStore{sb.byteStore}
 	for _, key := range sb.iterStore.Keys() {
 		if bar != nil {
 			bar.Increment()
 		}
 
 		// get the list of items
-		items := IteratorToList(nil, sb.iterStore.GetIterator(key), math.MaxInt32)
+		items := IteratorToList(nil, sb.iterStore.GetIterator(key))
 		n := sortutil.Dedupe(sortutil.Int32Slice(items))
 
 		// empty the original entry
@@ -136,7 +134,7 @@ func MergeIterStores(target, other IterStore) {
 	for _, key := range other.Keys() {
 		values := IteratorToList(nil, NewOrIterator(
 			target.GetIterator(key),
-			other.GetIterator(key)), 120)
+			other.GetIterator(key)))
 
 		target.Clear(key)
 		target.PushInts(key, values)
@@ -199,7 +197,7 @@ func FetchUpdates(db *sqlx.DB, state StoreState) (IterStore, StoreState, bool) {
 			items
 			LEFT JOIN items_text texts ON (items.id = texts.item_id)
 		WHERE id >= $1
-		ORDER BY items.id ASC LIMIT 10000`, state.LastItemId)
+		ORDER BY id ASC LIMIT 10000`, state.LastItemId)
 
 	if err != nil {
 		log.Println("Error while getting recent posts", err)
@@ -391,7 +389,7 @@ func main() {
 			}
 		}()
 
-		parser := NewParser(strings.NewReader(query), func(str string) *ItemIterator {
+		parser := NewParser(strings.NewReader(query), func(str string) ItemIterator {
 			var hash uint32
 			if str != "__all" {
 				if len(str) < 2 || str[1] != ':' {
@@ -409,8 +407,8 @@ func main() {
 		})
 
 		withReadLock(func() {
-			iter := parser.Parse()
-			result = IteratorToList(make([]int32, 0, 120), iter, 120)
+			iter := NewNegateIterator(NewLimitIterator(120, parser.Parse()))
+			result = IteratorToList(nil, iter)
 		})
 
 		return

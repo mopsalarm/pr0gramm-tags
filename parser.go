@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type IteratorFactory func(string) *ItemIterator
+type IteratorFactory func(string) ItemIterator
 
 type buf struct {
 	tok Token
@@ -49,15 +49,15 @@ func (p *Parser) consume(expect Token) string {
 	return lit
 }
 
-func (p *Parser) Parse() *ItemIterator {
+func (p *Parser) Parse() ItemIterator {
 	result := p.parseOrExpr()
 	p.consume(EOF)
 
 	return result
 }
 
-func (p *Parser) parseOrExpr() *ItemIterator {
-	var result *ItemIterator = p.parseAndExpr()
+func (p *Parser) parseOrExpr() ItemIterator {
+	var result ItemIterator = p.parseAndExpr()
 
 	for p.peek() == OP_OR {
 		p.consume(OP_OR)
@@ -69,7 +69,7 @@ func (p *Parser) parseOrExpr() *ItemIterator {
 	return result
 }
 
-func (p *Parser) parseAndExpr() *ItemIterator {
+func (p *Parser) parseAndExpr() ItemIterator {
 	result := p.parseWithoutExpr()
 
 	loop: for {
@@ -94,7 +94,7 @@ func (p *Parser) parseAndExpr() *ItemIterator {
 	return result
 }
 
-func (p *Parser) parseWithoutExpr() *ItemIterator {
+func (p *Parser) parseWithoutExpr() ItemIterator {
 	result := p.parseBaseExpr()
 
 	if p.peek() == OP_WITHOUT {
@@ -107,8 +107,8 @@ func (p *Parser) parseWithoutExpr() *ItemIterator {
 	return result
 }
 
-func (p *Parser) parseBaseExpr() *ItemIterator {
-	var result *ItemIterator
+func (p *Parser) parseBaseExpr() ItemIterator {
+	var result ItemIterator
 
 	tok := p.peek()
 	switch tok {

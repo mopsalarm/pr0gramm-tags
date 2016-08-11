@@ -8,7 +8,6 @@ import (
 	"os"
 	"bufio"
 	"encoding/json"
-	"math"
 )
 
 var byteOrder = binary.BigEndian
@@ -36,7 +35,7 @@ func WriteCheckpoint(writer io.Writer, state StoreState, store IterStore) error 
 
 	var values []int32
 	for _, key := range store.Keys() {
-		values = IteratorToList(values[:0], store.GetIterator(key), math.MaxInt32)
+		values = IteratorToList(values[:0], store.GetIterator(key))
 
 		if err := binary.Write(writer, byteOrder, uint32(key)); err != nil {
 			return err

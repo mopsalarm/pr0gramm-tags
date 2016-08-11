@@ -2,45 +2,46 @@ package main
 
 import "testing"
 
-type sliceAdvancer struct {
-	position int
+type sliceIter struct {
 	values   []int32
+	position int
 }
 
-func (it *sliceAdvancer) Advance() (int32, bool) {
-	if it.position < len(it.values) {
-		value := it.values[it.position]
-		it.position += 1
-		return value, true
-	} else {
-		return 0, false
-	}
+func (it *sliceIter) HasMore() bool {
+	return it.position < len(it.values)
 }
 
-func iter(values... int32) *ItemIterator {
-	return NewItemIterator(&sliceAdvancer{values: values})
+func (it *sliceIter) Peek() int32 {
+	return it.values[it.position]
 }
 
-func testIter(t *testing.T, expected *ItemIterator, actual *ItemIterator) {
-	for expected.Okay() && actual.Okay() {
-		first := expected.Value()
-		second := actual.Value()
+func (it *sliceIter) Next() int32 {
+	value := it.values[it.position]
+	it.position += 1
+	return value
+}
+
+func iter(values... int32) ItemIterator {
+	return &sliceIter{values: values}
+}
+
+func testIter(t *testing.T, expected ItemIterator, actual ItemIterator) {
+	for expected.HasMore() && actual.HasMore() {
+		first := expected.Next()
+		second := actual.Next()
 
 		if first != second {
 			t.Errorf("Iterator produced the value %d, but expected was %d", second, first)
 			return
 		}
-
-		actual.Advance()
-		expected.Advance()
 	}
 
-	if expected.Okay() {
-		t.Errorf("The iterator produces not enought values. Next expected was %d", expected.Value())
+	if expected.HasMore() {
+		t.Errorf("The iterator produces not enought values. Next expected was %d", expected.Next())
 	}
 
-	if actual.Okay() {
-		t.Errorf("The iterator produced too many values. Next unexpected was %d", actual.Value())
+	if actual.HasMore() {
+		t.Errorf("The iterator produced too many values. Next unexpected was %d", actual.Next())
 	}
 }
 

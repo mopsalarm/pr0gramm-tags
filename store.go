@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"unsafe"
 )
 
 type ByteStore interface {
@@ -24,7 +25,7 @@ type ByteStore interface {
 type IterStore interface {
 	ByteStore
 
-	GetIterator(key uint32) *ItemIterator
+	GetIterator(key uint32) ItemIterator
 	PushInt(key uint32, values int32)
 	PushInts(key uint32, values []int32)
 }
@@ -55,7 +56,7 @@ func (store *VarintStore) PushInts(key uint32, values []int32) {
 	}
 }
 
-func (store *VarintStore) GetIterator(key uint32) *ItemIterator {
+func (store *VarintStore) GetIterator(key uint32) ItemIterator {
 	return NewSequenceIterator(store.Get(key))
 }
 
@@ -74,62 +75,62 @@ func bytesToInt24(bytes [3]byte) int32 {
 	}
 	return val
 }
-//
-//type UncompressedStore struct {
-//	ByteStore
-//}
-//
-//func (store *UncompressedStore) PushInt(key uint32, value int32) {
-//	bytes := int24ToBytes(value)
-//	store.PushN(key, bytes[:])
-//}
-//
-//func (store *UncompressedStore) PushInts(key uint32, values []int32) {
-//	scratch := make([]byte, len(values) * 3)
-//	for idx, value := range values {
-//		bytes := int24ToBytes(value)
-//		copy(scratch[3 * idx:3 * idx + 3], bytes[:])
-//	}
-//
-//	store.PushN(key, scratch[:])
-//}
-//
-//func (store *UncompressedStore) GetIterator(key uint32) *ItemIterator {
-//	bytes := store.Get(key)
-//	val := &int24iterator{bytes: bytes, pos: -3}
-//	val.Next()
-//	return val
-//}
-//
-//type int24iterator struct {
-//	pos   int
-//	bytes []byte
-//	next  int32
-//}
-//
-//func (it *int24iterator) HasMore() bool {
-//	return it.pos < len(it.bytes)
-//}
-//
-//func (it *int24iterator) Peek() int32 {
-//	return it.next
-//}
-//
-//func (it *int24iterator) Next() int32 {
-//	value := it.next
-//
-//	it.pos += 3
-//	if it.HasMore() {
-//		scratch := (*[3]byte)(unsafe.Pointer(&it.bytes[it.pos]))
-//		it.next = bytesToInt24(*scratch)
-//	}
-//
-//	return value
-//}
-//
-//func (it *int24iterator) SkipUntil(val int32) {
-//	for it.HasMore() && it.Peek() < val {
-//		it.Next()
-//	}
-//}
+
+type UncompressedStore struct {
+	ByteStore
+}
+
+func (store *UncompressedStore) PushInt(key uint32, value int32) {
+	bytes := int24ToBytes(value)
+	store.PushN(key, bytes[:])
+}
+
+func (store *UncompressedStore) PushInts(key uint32, values []int32) {
+	scratch := make([]byte, len(values) * 3)
+	for idx, value := range values {
+		bytes := int24ToBytes(value)
+		copy(scratch[3 * idx:3 * idx + 3], bytes[:])
+	}
+
+	store.PushN(key, scratch[:])
+}
+
+func (store *UncompressedStore) GetIterator(key uint32) ItemIterator {
+	bytes := store.Get(key)
+	val := &int24iterator{bytes: bytes, pos: -3}
+	val.Next()
+	return val
+}
+
+type int24iterator struct {
+	pos   int
+	bytes []byte
+	next  int32
+}
+
+func (it *int24iterator) HasMore() bool {
+	return it.pos < len(it.bytes)
+}
+
+func (it *int24iterator) Peek() int32 {
+	return it.next
+}
+
+func (it *int24iterator) Next() int32 {
+	value := it.next
+
+	it.pos += 3
+	if it.HasMore() {
+		scratch := (*[3]byte)(unsafe.Pointer(&it.bytes[it.pos]))
+		it.next = bytesToInt24(*scratch)
+	}
+
+	return value
+}
+
+func (it *int24iterator) SkipUntil(val int32) {
+	for it.HasMore() && it.Peek() < val {
+		it.Next()
+	}
+}
 

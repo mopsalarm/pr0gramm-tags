@@ -1,56 +1,71 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
+	"io"
 )
 
-type Advancer interface {
-	Advance() (int32, bool)
+type ItemIterator interface {
+	HasMore() bool
+	Next() int32
+	Peek() int32
 }
 
-type ItemIterator struct {
-	advancer Advancer
-	value    int32
-	okay     bool
+type FastItemIterator interface {
+	ItemIterator
+	SkipUntil(val int32)
 }
 
-func NewItemIterator(advancer Advancer) *ItemIterator {
-	value, okay := advancer.Advance()
-	return &ItemIterator{advancer: advancer, value:value, okay: okay}
-}
-
-func (it *ItemIterator) Okay() bool {
-	return it.okay
-}
-
-func (it *ItemIterator) Value() int32 {
-	return it.value
-}
-
-func (it *ItemIterator) Advance() (int32, bool) {
-	value, okay := it.advancer.Advance()
-	it.value = value
-	it.okay = okay
-	return value, okay
-}
-
-func IteratorSkipUntil(iter *ItemIterator, val int32) {
-	for iter.Okay() && iter.Value() < val {
-		iter.Advance()
+func IteratorSkipUntil(iter ItemIterator, val int32) {
+	if fast, ok := iter.(FastItemIterator); ok {
+		fast.SkipUntil(val)
+	} else {
+		for iter.HasMore() && iter.Peek() < val {
+			iter.Next()
+		}
 	}
 }
 
-type deltaAdvancer struct {
-	pos      int
-	previous int32
-	bytes    []byte
+type varintDeltaIterator struct {
+	pos            int
+	next, previous int32
+	bytes          []byte
+	more           bool
 }
 
-func NewSequenceIterator(bytes []byte) *ItemIterator {
-	return NewItemIterator(&deltaAdvancer{bytes: bytes})
+func NewSequenceIterator(bytes []byte) ItemIterator {
+	it := &varintDeltaIterator{bytes: bytes, more: true}
+	it.advance()
+	return it
 }
 
-func (it *deltaAdvancer) Advance() (int32, bool) {
+func (it *varintDeltaIterator) HasMore() bool {
+	return it.more
+}
+
+func (it *varintDeltaIterator) Peek() int32 {
+	return it.next
+}
+
+func (it *varintDeltaIterator) Next() int32 {
+	current := it.next
+
+	if it.more {
+		it.advance()
+	}
+
+	return current
+}
+
+func (it *varintDeltaIterator) SkipUntil(val int32) {
+	// allow inlining of the methods.
+	for it.HasMore() && it.Peek() < val {
+		it.advance()
+	}
+}
+
+func (it *varintDeltaIterator) advance() {
 	if it.pos < len(it.bytes) {
 		next, n := fastVarint32(it.bytes[it.pos:])
 		if n <= 0 {
@@ -58,13 +73,10 @@ func (it *deltaAdvancer) Advance() (int32, bool) {
 		}
 
 		it.pos += n
-
-		value := next + it.previous
-		it.previous = value
-
-		return value, true
+		it.next = next + it.previous
+		it.previous = it.next
 	} else {
-		return 0, false
+		it.more = false
 	}
 }
 
@@ -101,31 +113,114 @@ func fastVarint32(buf []byte) (int32, int) {
 	return 0, 0
 }
 
-func IteratorToList(result []int32, iter *ItemIterator, maxValues int) []int32 {
-	for i := 0; i < maxValues && iter.Okay(); i++ {
-		result = append(result, iter.Value())
+type readerIterator struct {
+	more    bool
+	current int32
+	reader  io.ByteReader
+}
+
+func NewIteratorFromReader(reader io.ByteReader) ItemIterator {
+	r := &readerIterator{more: true, reader: reader}
+	r.buffer()
+	return r
+}
+
+func (it *readerIterator) buffer() {
+	if it.more {
+		value, err := binary.ReadVarint(it.reader)
+		if err != nil {
+			it.more = false
+		}
+
+		it.current += int32(value)
+	}
+}
+
+func (it *readerIterator) HasMore() bool {
+	return it.more
+}
+
+func (it *readerIterator) Peek() int32 {
+	return it.current
+}
+
+func (it *readerIterator) Next() int32 {
+	value := it.current
+	it.buffer()
+	return value
+}
+
+type negateIterator struct {
+	ItemIterator
+}
+
+func NewNegateIterator(iter ItemIterator) ItemIterator {
+	return &negateIterator{iter}
+}
+
+func (it *negateIterator) HasMore() bool {
+	return it.ItemIterator.HasMore()
+}
+
+func (it *negateIterator) Peek() int32 {
+	return -1 * it.ItemIterator.Peek()
+}
+
+func (it *negateIterator) Next() int32 {
+	return -1 * it.ItemIterator.Next()
+}
+
+func (it *negateIterator) SkipUntil(val int32) {
+	for it.HasMore() && it.Peek() < val {
+		it.Next()
+	}
+}
+
+type limitIterator struct {
+	remaining int
+	iter      ItemIterator
+}
+
+func NewLimitIterator(limit int, iter ItemIterator) ItemIterator {
+	return &limitIterator{remaining: limit, iter: iter}
+}
+
+func (it *limitIterator) HasMore() bool {
+	return it.remaining > 0 && it.iter.HasMore()
+}
+
+func (it *limitIterator) Peek() int32 {
+	return it.iter.Peek()
+}
+
+func (it *limitIterator) Next() int32 {
+	it.remaining -= 1
+	return it.iter.Next()
+}
+
+func IteratorToList(result []int32, iter ItemIterator) []int32 {
+	for iter.HasMore() {
+		result = append(result, iter.Next())
 	}
 
 	return result
 }
 
-type andAdvancer struct {
-	first, second *ItemIterator
+type andIterator struct {
+	first, second ItemIterator
 }
 
-func NewAndIterator(first, second *ItemIterator) *ItemIterator {
-	return NewItemIterator(&andAdvancer{first: first, second: second})
+func NewAndIterator(first, second ItemIterator) ItemIterator {
+	return &andIterator{first, second}
 }
 
-func (it *andAdvancer) Advance() (int32, bool) {
-	for it.first.Okay() && it.second.Okay() {
-		a := it.first.Value()
-		b := it.second.Value()
+func (it *andIterator) HasMore() bool {
+	for it.first.HasMore() && it.second.HasMore() {
+		a := it.first.Peek()
+		b := it.second.Peek()
 
 		if a == b {
-			it.first.Advance()
-			it.second.Advance()
-			return a, true
+			return true
 		}
 
 		if a < b {
@@ -135,88 +230,171 @@ func (it *andAdvancer) Advance() (int32, bool) {
 		}
 	}
 
-	return 0, false
+	return false
 }
 
-type orAdvancer struct {
-	first, second *ItemIterator
+func (it *andIterator) Peek() int32 {
+	return it.first.Peek()
 }
 
-func NewOrIterator(first, second *ItemIterator) *ItemIterator {
-	return NewItemIterator(&orAdvancer{first: first, second: second})
+func (it *andIterator) Next() int32 {
+	return it.first.Next()
 }
 
-func (it *orAdvancer) Advance() (int32, bool) {
-	aOkay := it.first.Okay()
-	bOkay := it.second.Okay()
+func (it *andIterator) SkipUntil(val int32) {
+	// allow inlining of the methods.
+	for it.HasMore() && it.Peek() < val {
+		it.Next()
+	}
+}
 
-	if aOkay && bOkay {
-		a := it.first.Value()
-		b := it.second.Value()
+type orIterator struct {
+	first, second ItemIterator
+}
 
-		switch {
-		case a < b:
-			it.first.Advance()
-			return a, true
+func NewOrIterator(first, second ItemIterator) ItemIterator {
+	return &orIterator{first, second}
+}
 
-		case a == b:
-			it.first.Advance()
-			it.second.Advance()
-			return a, true
+func (it *orIterator) HasMore() bool {
+	return it.first.HasMore() || it.second.HasMore()
+}
 
-		case a > b:
-			it.second.Advance()
-			return b, true
+func (it *orIterator) Peek() int32 {
+	if it.first.HasMore() && it.second.HasMore() {
+		a := it.first.Peek()
+		b := it.second.Peek()
+
+		if a < b {
+			return a
+		} else {
+			return b
 		}
 	}
 
-	if aOkay {
-		value := it.first.Value()
-		it.first.Advance()
-		return value, true
+	if it.first.HasMore() {
+		return it.first.Peek()
 	}
 
-	if bOkay {
-		value := it.second.Value()
-		it.second.Advance()
-		return value, true
+	if it.second.HasMore() {
+		return it.second.Peek()
 	}
 
-	return 0, false
+	panic(errors.New("end of iterator"))
 }
 
-type diffAdvancer struct {
-	first, second *ItemIterator
-}
+func (it *orIterator) Next() int32 {
+	if it.first.HasMore() && it.second.HasMore() {
+		a := it.first.Peek()
+		b := it.second.Peek()
 
-func NewDiffIterator(first, second *ItemIterator) *ItemIterator {
-	return NewItemIterator(&diffAdvancer{first:first, second:second})
-}
-
-func (it *diffAdvancer) Advance() (int32, bool) {
-	for it.first.Okay() {
-		if !it.second.Okay() {
-			value := it.first.Value()
-			it.first.Advance()
-			return value, true
+		if a == b {
+			it.second.Next()
+			return it.first.Next()
 		}
 
-		a := it.first.Value()
-		b := it.second.Value()
+		if a < b {
+			return it.first.Next()
+		} else {
+			return it.second.Next()
+		}
+	}
 
-		switch {
-		case a < b:
-			it.first.Advance()
-			return a, true
+	if it.first.HasMore() {
+		return it.first.Next()
+	}
 
-		case a > b:
+	if it.second.HasMore() {
+		return it.second.Next()
+	}
+
+	panic(errors.New("end of iterator"))
+}
+
+func (it *orIterator) SkipUntil(val int32) {
+	// allow inlining of the methods.
+	for it.HasMore() && it.Peek() < val {
+		it.Next()
+	}
+}
+
+type diffIterator struct {
+	first, second ItemIterator
+}
+
+func NewDiffIterator(first, second ItemIterator) ItemIterator {
+	return &diffIterator{first, second}
+}
+
+func (it *diffIterator) HasMore() bool {
+	for it.first.HasMore() {
+		if ! it.second.HasMore() {
+			return it.first.HasMore()
+		}
+
+		a := it.first.Peek()
+		b := it.second.Peek()
+
+		if a < b {
+			return true
+		} else if a == b {
+			a = it.first.Next()
 			IteratorSkipUntil(it.second, a)
-
-		case a == b:
-			it.first.Advance()
+		} else {
 			IteratorSkipUntil(it.second, a)
 		}
 	}
 
-	return 0, false
+	return false
+}
+
+func (it *diffIterator) Peek() int32 {
+	return it.first.Peek()
+}
+
+func (it *diffIterator) Next() int32 {
+	return it.first.Next()
+}
+
+func (it *diffIterator) SkipUntil(val int32) {
+	// allow inlining of the methods.
+	for it.HasMore() && it.Peek() < val {
+		it.Next()
+	}
+}
+
+type cachingIterator struct {
+	iter ItemIterator
+	next int32
+	more bool
+}
+
+func NewCachingIterator(iter ItemIterator) ItemIterator {
+	i := &cachingIterator{iter: iter, more: true}
+	i.buffer()
+	return i
+}
+
+func (it *cachingIterator) buffer() {
+	if it.more {
+		if it.iter.HasMore() {
+			it.next = it.iter.Next()
+		} else {
+			it.more = false
+		}
+	}
+}
+
+func (it *cachingIterator) HasMore() bool {
+	return it.more
+}
+
+func (it *cachingIterator) Peek() int32 {
+	return it.next
+}
+
+func (it *cachingIterator) Next() int32 {
+	value := it.next
+	it.buffer()
+	return value
 }
