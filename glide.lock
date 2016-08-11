@@ -1,0 +1,37 @@
+hash: f7f37377c4514a4fd2cc45379d8c29128919e8c813fd0585315fd1222d0a2187
+updated: 2016-08-08T21:02:09.731797395+02:00
+imports:
+- name: github.com/cznic/sortutil
+  version: 4c7342852e65c2088c981288f2c5610d10b9f7f4
+- name: github.com/gin-gonic/gin
+  version: 9163ee543d3f1fab9b0ad8cdf6dc2a6ec2c07dbb
+  subpackages:
+  - binding
+  - render
+- name: github.com/jessevdk/go-flags
+  version: f2785f5820ec967043de79c8be97edfc464ca745
+- name: github.com/jmoiron/sqlx
+  version: 7396209bbeada6a4fcc28aa9408f89b2e71cac39
+  subpackages:
+  - reflectx
+- name: github.com/julienschmidt/httprouter
+  version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
+- name: github.com/lib/pq
+  version: 80f8150043c80fb52dee6bc863a709cdac7ec8f8
+  subpackages:
+  - oid
+- name: github.com/manucorporat/sse
+  version: c574f6c50c8594f93d28b03a1bbd87b4a3899093
+- name: github.com/mattn/go-colorable
+  version: 043ae16291351db8465272edf465c9f388161627
+- name: github.com/robfig/cron
+  version: b024fc5ea0e34bc3f83d9941c8d60b0622bfaca4
+- name: golang.org/x/net
+  version: 84ba27dd5b2d8135e9da1395277f2c9333a2ffda
+  subpackages:
+  - context
+- name: gopkg.in/bluesuncorp/validator.v5
+  version: d5acf1dac43705f8bfbb71d878e290e2bed3950b
+- name: gopkg.in/cheggaaa/pb.v1
+  version: 9453b2db37f4d8bc63751daca63bbe7049eb5e74
+devImports: []

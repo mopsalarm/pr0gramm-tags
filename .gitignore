@@ -1,0 +1,6 @@
+*.iml
+/.idea
+*.o
+/go-pr0gramm-tags
+/vendor
+
