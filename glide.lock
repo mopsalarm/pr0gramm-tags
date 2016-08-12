@@ -1,5 +1,5 @@
-hash: edc96f3827ce3ca47eb707f525a08b8a7d749143c06bd873153241e02f8435fb
-updated: 2016-08-11T21:27:41.902335555+02:00
+hash: 79e8cc805185038f466637ef6d82f5a3518a331992a9068bcbcbd009b260e64f
+updated: 2016-08-12T20:36:02.286559479+02:00
 imports:
 - name: github.com/cznic/sortutil
   version: 4c7342852e65c2088c981288f2c5610d10b9f7f4
@@ -26,10 +26,14 @@ imports:
   version: 043ae16291351db8465272edf465c9f388161627
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+- name: github.com/rcrowley/go-metrics
+  version: bdb33529eca3e55eac7328e07c57012a797af602
 - name: github.com/robfig/cron
   version: b024fc5ea0e34bc3f83d9941c8d60b0622bfaca4
 - name: github.com/Sirupsen/logrus
   version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
+- name: github.com/vistarmedia/go-datadog
+  version: d05578420bfaf173df31fc00580f57b904df6222
 - name: golang.org/x/net
   version: 84ba27dd5b2d8135e9da1395277f2c9333a2ffda
   subpackages:

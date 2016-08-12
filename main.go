@@ -21,6 +21,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/robfig/cron"
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
+	"github.com/rcrowley/go-metrics"
+	"github.com/vistarmedia/go-datadog"
 )
 
 var umlautReplacer = strings.NewReplacer("ä", "ae", "ü", "ue", "ö", "oe", "ß", "ss", "-", " ")
@@ -67,11 +69,16 @@ func main() {
 		CheckpointFile string `long:"checkpoint-file" default:"/tmp/checkpoint.store" description:"Filename of the checkpoint file to read and write."`
 		Postgres       string `long:"postgres" default:"postgres://postgres:password@localhost?sslmode=disable" description:"Connection-string for postgres database."`
 		HttpListen     string `long:"http-listen" default:":8080" description:"Listen address for the rest api http server."`
+		Datadog        string `long:"datadog" description:"Pass the datadog api key to enable datadog metrics."`
 	}
 
 	_, err := flags.Parse(&opts)
 	if err != nil {
 		os.Exit(1)
+	}
+
+	if opts.Datadog != "" {
+		startMetricsWithDatadog(opts.Datadog)
 	}
 
 	db := sqlx.MustConnect("postgres", opts.Postgres)
@@ -118,7 +125,7 @@ func main() {
 	if opts.Benchmark {
 		log.Info("Running benchmarks.")
 		start := time.Now()
-		RunBenchmarks(actions)
+		runBenchmarks(actions)
 
 		log.Infof("Benchmarking took %s, exiting now.", time.Since(start))
 		os.Exit(1)
@@ -132,7 +139,7 @@ func main() {
 		})
 
 		if err != nil {
-			log.Println("Error while updating:", err)
+			log.WithError(err).Warn("Error during updating")
 		}
 	})
 
@@ -151,7 +158,17 @@ func main() {
 	restApi(opts.HttpListen, actions, opts.CheckpointFile)
 }
 
-func RunBenchmarks(actions *storeActions) {
+func startMetricsWithDatadog(datadogApiKey string) {
+	metrics.RegisterRuntimeMemStats(metrics.DefaultRegistry)
+	go metrics.CaptureRuntimeMemStats(metrics.DefaultRegistry, 1 * time.Minute)
+
+	host, _ := os.Hostname()
+
+	log.Infof("Starting datadog reporter on host %s\n", host)
+	go datadog.New(host, datadogApiKey).DefaultReporter().Start(1 * time.Minute)
+}
+
+func runBenchmarks(actions *storeActions) {
 	fp, _ := os.Create("/tmp/profile.pprof")
 	pprof.StartCPUProfile(fp)
 
@@ -173,7 +190,7 @@ func withRecovery(name string, fn func()) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 
-			err = fmt.Errorf("Cought an error in function '%s': %s", name, r)
+			err = fmt.Errorf("Caught an error in function '%s': %s", name, r)
 		}
 	}()
 

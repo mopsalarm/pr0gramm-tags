@@ -10,6 +10,7 @@ import (
 
 func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 	r := gin.New()
+	gin.SetMode(gin.ReleaseMode)
 	r.Use(gin.Recovery(), gin.LoggerWithWriter(logrus.StandardLogger().Writer()))
 
 	r.GET("/query/:query", func(c *gin.Context) {

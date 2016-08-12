@@ -15,11 +15,15 @@ type Locker struct {
 }
 
 func (l *Locker) WithReadLock(fn func()) {
-	withLock(l.lock.RLocker(), fn)
+	withLock(l.lock.RLocker(), func() {
+		metricsReadLock.Time(fn)
+	})
 }
 
 func (l *Locker) WithWriteLock(fn func()) {
-	withLock(&l.lock, fn)
+	withLock(&l.lock, func() {
+		metricsWriteLock.Time(fn)
+	})
 }
 
 func withLock(locker sync.Locker, fn func()) {
@@ -49,6 +53,8 @@ func (sa *storeActions) UpdateOnce(db *sqlx.DB) bool {
 
 	// allow only one update at a time
 	withLock(&sa.updateLock, func() {
+		metricsKeysCount.Update(int64(sa.store.KeyCount()))
+		metricsUpdaterKeysChanged.Inc(int64(updates.KeyCount()))
 
 		// now merge the updates into the store...
 		start := time.Now()
@@ -81,10 +87,11 @@ func (sa *storeActions) WriteCheckpoint(file string) (err error) {
 		start := time.Now()
 		err = store.WriteCheckpointFile(file, sa.storeState, sa.store)
 		if err != nil {
-			log.Println("Could not write checkpoint file:", err)
+			log.Warn("Could not write checkpoint file:", err)
+			metricsCheckpointError.Inc(1)
 		}
 
-		log.Println("Writing checkpoint took", time.Since(start))
+		log.WithField("duration", time.Since(start)).Info("Writing checkpoint finished")
 	})
 
 	return
@@ -92,24 +99,26 @@ func (sa *storeActions) WriteCheckpoint(file string) (err error) {
 
 func (sa *storeActions) Search(query string) (result []int32, err error) {
 	err = withRecovery("search", func() {
-		queryLowerCase := strings.ToLower(query)
+		metricsSearch.Time(func() {
+			queryLowerCase := strings.ToLower(query)
 
-		sa.WithReadLock(func() {
-			parser := NewParser(strings.NewReader(queryLowerCase), func(str string) store.ItemIterator {
-				var hash uint32
-				if str != "__all" {
-					if len(str) < 2 || str[1] != ':' {
-						str = CleanString(str)
+			sa.WithReadLock(func() {
+				parser := NewParser(strings.NewReader(queryLowerCase), func(str string) store.ItemIterator {
+					var hash uint32
+					if str != "__all" {
+						if len(str) < 2 || str[1] != ':' {
+							str = CleanString(str)
+						}
+
+						hash = HashWord(str)
 					}
 
-					hash = HashWord(str)
-				}
+					return sa.store.GetIterator(hash)
+				})
 
-				return sa.store.GetIterator(hash)
+				iter := store.NewNegateIterator(store.NewLimitIterator(120, parser.Parse()))
+				result = store.IteratorToList(nil, iter)
 			})
-
-			iter := store.NewNegateIterator(store.NewLimitIterator(120, parser.Parse()))
-			result = store.IteratorToList(nil, iter)
 		})
 	})
 

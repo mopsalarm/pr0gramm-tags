@@ -104,6 +104,7 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 
 		if err != nil {
 			log.WithError(err).Warn("Could not fetch the list of post items")
+			metricsUpdaterError.Inc(1)
 			err = nil
 		}
 	}
@@ -120,7 +121,8 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 		})
 
 		if err != nil {
-			log.Println("Error while streaming from postgres", err)
+			log.WithError(err).Warn("Error while streaming from postgres")
+			metricsUpdaterError.Inc(1)
 		}
 	}
 
