@@ -70,11 +70,16 @@ func main() {
 		Postgres       string `long:"postgres" default:"postgres://postgres:password@localhost?sslmode=disable" description:"Connection-string for postgres database."`
 		HttpListen     string `long:"http-listen" default:":8080" description:"Listen address for the rest api http server."`
 		Datadog        string `long:"datadog" description:"Pass the datadog api key to enable datadog metrics."`
+		Verbose        bool `long:"verbose" description:"Activate verbose logging"`
 	}
 
 	_, err := flags.Parse(&opts)
 	if err != nil {
 		os.Exit(1)
+	}
+
+	if opts.Verbose {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	if opts.Datadog != "" {
@@ -176,7 +181,7 @@ func runBenchmarks(actions *storeActions) {
 	for i := 0; i < 30; i++ {
 		for j := 0; j < 100; j++ {
 			// this query produces only 3 hits, but we need to search nearly all posts.
-			actions.Search("((u:cha0s&f:sfw)-f:top)&webm")
+			actions.Search("((u:cha0s&f:sfw)-f:top)&webm", 0)
 		}
 
 		bar.Add(100)

@@ -97,12 +97,13 @@ func (sa *storeActions) WriteCheckpoint(file string) (err error) {
 	return
 }
 
-func (sa *storeActions) Search(query string) (result []int32, err error) {
+func (sa *storeActions) Search(query string, olderThan int32) (result []int32, err error) {
 	err = withRecovery("search", func() {
 		metricsSearch.Time(func() {
 			queryLowerCase := strings.ToLower(query)
-
 			sa.WithReadLock(func() {
+				log.WithField("query", query).WithField("older", olderThan).Debug("Start search query")
+
 				parser := NewParser(strings.NewReader(queryLowerCase), func(str string) store.ItemIterator {
 					var hash uint32
 					if str != "__all" {
@@ -116,7 +117,15 @@ func (sa *storeActions) Search(query string) (result []int32, err error) {
 					return sa.store.GetIterator(hash)
 				})
 
-				iter := store.NewNegateIterator(store.NewLimitIterator(120, parser.Parse()))
+				iter := parser.Parse()
+				if olderThan > 0 {
+					// skipping posts. we need to invert the item id here, cause
+					// the search is running on negative ids internally
+					store.IteratorSkipUntil(iter, -olderThan)
+				}
+
+				// get the first 120 results
+				iter = store.NewLimitIterator(120,  store.NewNegateIterator(iter))
 				result = store.IteratorToList(nil, iter)
 			})
 		})

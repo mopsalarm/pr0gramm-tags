@@ -1,8 +1,12 @@
-hash: 79e8cc805185038f466637ef6d82f5a3518a331992a9068bcbcbd009b260e64f
-updated: 2016-08-12T20:36:02.286559479+02:00
+hash: 5bafa31a198559221d62a8590114f6c8400beeed71299e561a4379b4c74e0432
+updated: 2016-08-12T22:46:18.67024499+02:00
 imports:
 - name: github.com/cznic/sortutil
   version: 4c7342852e65c2088c981288f2c5610d10b9f7f4
+- name: github.com/gin-gonic/contrib
+  version: 547e518040cfb96576b507d2f26779ab9c6fc829
+  subpackages:
+  - blob/master/ginrus/
 - name: github.com/gin-gonic/gin
   version: 9163ee543d3f1fab9b0ad8cdf6dc2a6ec2c07dbb
   subpackages:
