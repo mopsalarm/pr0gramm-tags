@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"io"
+	"github.com/mopsalarm/go-pr0gramm-tags/store"
 )
 
-type IteratorFactory func(string) ItemIterator
+type IteratorFactory func(string) store.ItemIterator
 
 type buf struct {
 	tok Token
@@ -49,30 +50,30 @@ func (p *Parser) consume(expect Token) string {
 	return lit
 }
 
-func (p *Parser) Parse() ItemIterator {
+func (p *Parser) Parse() store.ItemIterator {
 	result := p.parseOrExpr()
 	p.consume(EOF)
 
 	return result
 }
 
-func (p *Parser) parseOrExpr() ItemIterator {
-	var result ItemIterator = p.parseAndExpr()
+func (p *Parser) parseOrExpr() store.ItemIterator {
+	var result store.ItemIterator = p.parseAndExpr()
 
 	for p.peek() == OP_OR {
 		p.consume(OP_OR)
 
 		second := p.parseAndExpr()
-		result = NewOrIterator(result, second)
+		result = store.NewOrIterator(result, second)
 	}
 
 	return result
 }
 
-func (p *Parser) parseAndExpr() ItemIterator {
+func (p *Parser) parseAndExpr() store.ItemIterator {
 	result := p.parseWithoutExpr()
 
-loop:
+	loop:
 	for {
 		tok := p.peek()
 		switch tok {
@@ -85,7 +86,7 @@ loop:
 
 		case WORD:
 			second := p.parseWithoutExpr()
-			result = NewAndIterator(result, second)
+			result = store.NewAndIterator(result, second)
 
 		default:
 			break loop
@@ -95,21 +96,21 @@ loop:
 	return result
 }
 
-func (p *Parser) parseWithoutExpr() ItemIterator {
+func (p *Parser) parseWithoutExpr() store.ItemIterator {
 	result := p.parseBaseExpr()
 
 	if p.peek() == OP_WITHOUT {
 		p.consume(OP_WITHOUT)
 
 		second := p.parseBaseExpr()
-		result = NewDiffIterator(result, second)
+		result = store.NewDiffIterator(result, second)
 	}
 
 	return result
 }
 
-func (p *Parser) parseBaseExpr() ItemIterator {
-	var result ItemIterator
+func (p *Parser) parseBaseExpr() store.ItemIterator {
+	var result store.ItemIterator
 
 	tok := p.peek()
 	switch tok {
@@ -123,7 +124,7 @@ func (p *Parser) parseBaseExpr() ItemIterator {
 
 	case OP_WITHOUT:
 		p.consume(OP_WITHOUT)
-		result = NewDiffIterator(p.makeIter("__all"), p.parseBaseExpr())
+		result = store.NewDiffIterator(p.makeIter("__all"), p.parseBaseExpr())
 
 	default:
 		panic(fmt.Errorf("Found unexpected token '%q'", tok))

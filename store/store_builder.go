@@ -1,26 +1,30 @@
-package main
+package store
 
 import (
 	"github.com/cznic/sortutil"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
+type Hasher func(string) uint32
+
 type StoreBuilder struct {
 	ShowProgress bool
+	hasher Hasher
 	byteStore    ByteStore
 	iterStore    *iterStore
 }
 
-func NewStoreBuilder() *StoreBuilder {
-	byteStore := NewCppStore()
+func NewStoreBuilder(hasher Hasher) *StoreBuilder {
+	byteStore := NewByteStore()
 	return &StoreBuilder{
+		hasher: hasher,
 		byteStore: byteStore,
 		iterStore: &iterStore{byteStore},
 	}
 }
 
 func (sb *StoreBuilder) Push(word string, itemId int32) {
-	hash := HashWord(word)
+	hash := sb.hasher(word)
 
 	// check if the hash is alredy known before adding it
 	known := sb.byteStore.Contains(hash)

@@ -1,8 +1,7 @@
-package main
+package store
 
 import (
 	"fmt"
-	"sync"
 )
 
 type IterStore interface {
@@ -20,13 +19,17 @@ type iterStore struct {
 }
 
 func NewIterStore(store ByteStore) IterStore {
+	if store == nil {
+		store = NewByteStore()
+	}
+
 	return &iterStore{store}
 }
 
 func (store *iterStore) PushInt(key uint32, value int32) {
 	bytes := store.Get(key)
 	if len(bytes) == 0 {
-		codec := Int24CodecInstance
+		codec := int24CodecInstance
 		store.Push(key, codec.Id())
 		store.PushN(key, codec.Encode([]int32{value}))
 	} else {
@@ -63,34 +66,9 @@ func (store *iterStore) GetIterator(key uint32) ItemIterator {
 	}
 }
 
-func MergeIterStores(target, other IterStore, locker sync.Locker) {
-	mergeKey := func(key uint32) {
+func MergeIterStores(target, other IterStore) {
+	for _, key := range other.Keys() {
 		values := IteratorToList(nil, NewOrIterator(target.GetIterator(key), other.GetIterator(key)))
 		target.Replace(key, values)
-	}
-
-	if locker == nil {
-		// fast path
-		for _, key := range other.Keys() {
-			mergeKey(key)
-		}
-	} else {
-		// get the keys while holding the lock
-		keys := func() []uint32 {
-			locker.Lock()
-			defer locker.Unlock()
-
-			return other.Keys()
-		}()
-
-		// lock on each key
-		for _, key := range keys {
-			func() {
-				locker.Lock()
-				defer locker.Unlock()
-
-				mergeKey(key)
-			}()
-		}
 	}
 }

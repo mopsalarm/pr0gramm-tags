@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
+	"github.com/mopsalarm/go-pr0gramm-tags/store"
 )
 
 type tagInfo struct {
@@ -51,7 +52,7 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 		FROM
 			items
 			LEFT JOIN items_text texts ON (items.id = texts.item_id)
-		WHERE id >= $1
+		WHERE id >= $1 OR to_timestamp(created) > CURRENT_TIMESTAMP - interval '1day'
 		ORDER BY id ASC LIMIT $2`, firstItemId, itemCount)
 
 	if err == nil {
@@ -63,8 +64,8 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 	return err
 }
 
-func FetchUpdates(db *sqlx.DB, state StoreState) (IterStore, StoreState, bool) {
-	builder := NewStoreBuilder()
+func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.StoreState, bool) {
+	builder := store.NewStoreBuilder(HashWord)
 
 	itemCount := 20000
 	{

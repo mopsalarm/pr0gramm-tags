@@ -2,9 +2,9 @@
 #include "sequence.hpp"
 
 #include <iostream>
-#include <unordered_map>
+#include <map>
 
-typedef std::unordered_map<uint32_t, sequence> map_t;
+typedef std::map<uint32_t, sequence> map_t;
 
 inline map_t& get(store ptr) {
     return *(map_t*) ptr;
@@ -60,7 +60,7 @@ extern "C" {
     uint32_t store_memory_size(store map) {
         uint32_t sum = 0;
         for(auto&& it : get(map)) {
-            sum += it.second.memory_size();
+            sum += 32 + it.second.memory_size();
         }
 
         return sum;

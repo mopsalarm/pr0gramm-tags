@@ -20,6 +20,7 @@ import (
 	"github.com/jessevdk/go-flags"
 	_ "github.com/lib/pq"
 	"github.com/robfig/cron"
+	"github.com/mopsalarm/go-pr0gramm-tags/store"
 )
 
 var umlautReplacer = strings.NewReplacer("ä", "ae", "ü", "ue", "ö", "oe", "ß", "ss", "-", " ")
@@ -78,18 +79,18 @@ func main() {
 	db.SetMaxIdleConns(1)
 	db.SetConnMaxLifetime(5 * time.Minute)
 
-	storeState := StoreState{}
-	store := NewIterStore(NewCppStore())
+	storeState := store.StoreState{}
+	iterStore := store.NewIterStore(nil)
 
 	// read a checkpoint if there is one
 	if st, err := os.Stat(opts.CheckpointFile); err == nil && st.Size() > 0 {
 		log.WithField("file", opts.CheckpointFile).Info("Found checkpoint to load")
 
-		if err := ReadCheckpointFile(opts.CheckpointFile, &storeState, store); err != nil {
+		if err := store.ReadCheckpointFile(opts.CheckpointFile, &storeState, iterStore); err != nil {
 			log.WithError(err).Warn("Reading checkpoint failed")
 		} else {
 			log.WithField("state", storeState).
-				WithField("memoryUsage", store.MemorySize()).
+				WithField("memoryUsage", iterStore.MemorySize()).
 				Info("Checkpoint loaded, state:")
 		}
 	}
@@ -110,7 +111,7 @@ func main() {
 	}
 
 	actions := &storeActions{
-		store:      store,
+		store:      iterStore,
 		storeState: storeState,
 	}
 

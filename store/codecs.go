@@ -1,4 +1,4 @@
-package main
+package store
 
 import (
 	"encoding/binary"
@@ -88,20 +88,20 @@ func (*int32Codec) Encode(values []int32) []byte {
 	return (*[1 << 24]byte)(unsafe.Pointer(&values[0]))[:byteCount:byteCount]
 }
 
-var Int24CodecInstance = &int24Codec{}
-var VarintCodecInstance = &varintCodec{}
-var Int32CodecInstance = &int32Codec{}
+var int24CodecInstance = &int24Codec{}
+var varintCodecInstance = &varintCodec{}
+var int32CodecInstance = &int32Codec{}
 
 func SequenceCodecById(id byte) SequenceCodec {
 	switch {
 	case id == 1:
-		return Int24CodecInstance
+		return int24CodecInstance
 
 	case id == 2:
-		return VarintCodecInstance
+		return varintCodecInstance
 
 	case id == 4:
-		return Int32CodecInstance
+		return int32CodecInstance
 
 	default:
 		panic(errors.New("unknown codec"))
@@ -110,8 +110,8 @@ func SequenceCodecById(id byte) SequenceCodec {
 
 func OptimalCodec(itemCount int) SequenceCodec {
 	if itemCount > 100000 {
-		return Int32CodecInstance
+		return int32CodecInstance
 	} else {
-		return VarintCodecInstance
+		return varintCodecInstance
 	}
 }

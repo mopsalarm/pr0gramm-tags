@@ -1,4 +1,4 @@
-package main
+package store
 
 // #cgo CXXFLAGS: -std=c++11 -O3
 // #include "sequence_c.h"
@@ -30,7 +30,7 @@ type cppStore struct {
 	p C.store
 }
 
-func NewCppStore() *cppStore {
+func NewByteStore() *cppStore {
 	p := C.store_new()
 
 	store := &cppStore{p: p}
@@ -83,7 +83,7 @@ func (store *cppStore) Get(key uint32) []byte {
 	bv := C.store_get(store.p, C.uint32_t(key))
 	length := int(bv.length)
 
-	if length > 1<<24 {
+	if length > 1 << 24 {
 		panic(fmt.Errorf("Sequence is too long (%dbyte).", length))
 	}
 

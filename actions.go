@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
+	"github.com/mopsalarm/go-pr0gramm-tags/store"
 )
 
 type Locker struct {
@@ -14,28 +15,31 @@ type Locker struct {
 }
 
 func (l *Locker) WithReadLock(fn func()) {
-	l.lock.RLock()
-	defer l.lock.RUnlock()
-	fn()
+	withLock(l.lock.RLocker(), fn)
 }
 
 func (l *Locker) WithWriteLock(fn func()) {
-	l.lock.Lock()
-	defer l.lock.Unlock()
+	withLock(&l.lock, fn)
+}
+
+func withLock(locker sync.Locker, fn func()) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	fn()
 }
 
 type storeActions struct {
 	Locker
 	updateLock sync.Mutex
-	store      IterStore
-	storeState StoreState
+	store      store.IterStore
+	storeState store.StoreState
 }
 
 func (sa *storeActions) UpdateOnce(db *sqlx.DB) bool {
 	log.Debug("Looking for updates...")
 
-	var currentStoreState StoreState
+	var currentStoreState store.StoreState
 	sa.WithReadLock(func() {
 		currentStoreState = sa.storeState
 	})
@@ -44,21 +48,29 @@ func (sa *storeActions) UpdateOnce(db *sqlx.DB) bool {
 	log.WithField("keyCount", updates.KeyCount()).Debug("Will merge updates now")
 
 	// allow only one update at a time
-	sa.updateLock.Lock()
-	defer sa.updateLock.Unlock()
+	withLock(&sa.updateLock, func() {
 
-	// now merge the updates into the store...
-	start := time.Now()
-	MergeIterStores(sa.store, updates, &sa.lock)
+		// now merge the updates into the store...
+		start := time.Now()
 
-	sa.WithWriteLock(func() {
-		sa.storeState = newState
+		// get the keys while holding the lock
+		for _, key := range updates.Keys() {
+			values := store.IteratorToList(nil, store.NewOrIterator(sa.store.GetIterator(key), updates.GetIterator(key)))
 
-		log.WithField("duration", time.Since(start)).
-			WithField("keyCount", updates.KeyCount()).
-			WithField("state", sa.storeState).
-			WithField("memory", sa.store.MemorySize()).
-			Info("Update finsihed")
+			sa.WithWriteLock(func() {
+				sa.store.Replace(key, values)
+			})
+		}
+
+		sa.WithWriteLock(func() {
+			sa.storeState = newState
+
+			log.WithField("duration", time.Since(start)).
+				WithField("keyCount", updates.KeyCount()).
+				WithField("state", sa.storeState).
+				WithField("memory", sa.store.MemorySize()).
+				Info("Update finished and merged")
+		})
 	})
 
 	return more
@@ -67,7 +79,7 @@ func (sa *storeActions) UpdateOnce(db *sqlx.DB) bool {
 func (sa *storeActions) WriteCheckpoint(file string) (err error) {
 	sa.WithReadLock(func() {
 		start := time.Now()
-		err = WriteCheckpointFile(file, sa.storeState, sa.store)
+		err = store.WriteCheckpointFile(file, sa.storeState, sa.store)
 		if err != nil {
 			log.Println("Could not write checkpoint file:", err)
 		}
@@ -83,7 +95,7 @@ func (sa *storeActions) Search(query string) (result []int32, err error) {
 		queryLowerCase := strings.ToLower(query)
 
 		sa.WithReadLock(func() {
-			parser := NewParser(strings.NewReader(queryLowerCase), func(str string) ItemIterator {
+			parser := NewParser(strings.NewReader(queryLowerCase), func(str string) store.ItemIterator {
 				var hash uint32
 				if str != "__all" {
 					if len(str) < 2 || str[1] != ':' {
@@ -96,8 +108,8 @@ func (sa *storeActions) Search(query string) (result []int32, err error) {
 				return sa.store.GetIterator(hash)
 			})
 
-			iter := NewNegateIterator(NewLimitIterator(120, parser.Parse()))
-			result = IteratorToList(nil, iter)
+			iter := store.NewNegateIterator(store.NewLimitIterator(120, parser.Parse()))
+			result = store.IteratorToList(nil, iter)
 		})
 	})
 
