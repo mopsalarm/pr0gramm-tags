@@ -30,12 +30,13 @@ func queryTags(db *sqlx.DB, firstTagId, count int, consumer func(tagInfo)) error
 }
 
 type postInfo struct {
-	Id       int    `db:"id"`
-	Flags    int    `db:"flags"`
-	Score    int    `db:"score"`
-	Promoted bool   `db:"promoted"`
-	Username string `db:"username"`
-	HasText  bool   `db:"has_text"`
+	Id            int    `db:"id"`
+	Flags         int    `db:"flags"`
+	Score         int    `db:"score"`
+	Promoted      bool   `db:"promoted"`
+	Username      string `db:"username"`
+	HasText       bool   `db:"has_text"`
+	Controversial bool   `db:"is_controversial"`
 }
 
 func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)) error {
@@ -48,12 +49,14 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 			items.up - items.down as score,
 			items.promoted != 0 as promoted,
 			lower(items.username) AS username,
-			COALESCE(texts.has_text, FALSE) AS has_text
+			COALESCE(texts.has_text, FALSE) AS has_text,
+			contr.id IS NOT NULL as is_controversial
 		FROM
 			items
 			LEFT JOIN items_text texts ON (items.id = texts.item_id)
-		WHERE id >= $1 OR to_timestamp(created) > CURRENT_TIMESTAMP - interval '1day'
-		ORDER BY id ASC LIMIT $2`, firstItemId, itemCount)
+			LEFT JOIN controversial contr ON (items.id = contr.item_id)
+		WHERE items.id >= $1 OR to_timestamp(items.created) > CURRENT_TIMESTAMP - interval '1day'
+		ORDER BY items.id ASC LIMIT $2`, firstItemId, itemCount)
 
 	if err == nil {
 		for _, postInfo := range postInfos {
@@ -89,6 +92,10 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 
 			if postInfo.HasText {
 				builder.Push("f:text", itemId)
+			}
+
+			if postInfo.Controversial {
+				builder.Push("f:controversial", itemId)
 			}
 
 			// sort posts into bins (size 500) by score.

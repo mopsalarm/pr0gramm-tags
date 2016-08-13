@@ -18,3 +18,4 @@ import:
 - package: github.com/gin-gonic/contrib
   subpackages:
   - blob/master/ginrus/
+- package: github.com/cznic/mathutil

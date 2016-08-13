@@ -1,20 +1,24 @@
 package store
 
 import (
-	"encoding/binary"
 	"errors"
-	"io"
+	"github.com/cznic/mathutil"
 )
 
 type ItemIterator interface {
 	HasMore() bool
 	Next() int32
 	Peek() int32
+	MaxSize() int
 }
 
 type FastItemIterator interface {
 	ItemIterator
 	SkipUntil(val int32)
+}
+
+type ToSliceIterator interface {
+	ToSlice() []int32
 }
 
 func IteratorSkipUntil(iter ItemIterator, val int32) {
@@ -25,6 +29,24 @@ func IteratorSkipUntil(iter ItemIterator, val int32) {
 			iter.Next()
 		}
 	}
+}
+
+func IteratorToList(result []int32, iter ItemIterator) []int32 {
+	if it, ok := iter.(ToSliceIterator); ok {
+		return it.ToSlice()
+	}
+
+	if result == nil {
+		if maxSize := iter.MaxSize(); maxSize > 0 {
+			result = make([]int32, 0, maxSize)
+		}
+	}
+
+	for iter.HasMore() {
+		result = append(result, iter.Next())
+	}
+
+	return result
 }
 
 type emptyIterator struct{}
@@ -45,6 +67,10 @@ func (it *emptyIterator) Peek() int32 {
 
 func (it *emptyIterator) Next() int32 {
 	panic(errors.New("Next() called on empty iterator."))
+}
+
+func (it *emptyIterator) MaxSize() int {
+	return 0
 }
 
 type decompressingIterator struct {
@@ -76,6 +102,10 @@ func (it *decompressingIterator) Next() int32 {
 	}
 
 	return current
+}
+
+func (it *decompressingIterator) MaxSize() int {
+	return len(it.bytes)
 }
 
 func (it *decompressingIterator) SkipUntil(val int32) {
@@ -117,57 +147,20 @@ func fastVarint32(buf []byte) (int32, int) {
 				return 0, -(i + 1) // overflow
 			}
 
-			ux = ux | uint32(b)<<s
+			ux = ux | uint32(b) << s
 			x := int32(ux >> 1)
-			if ux&1 != 0 {
+			if ux & 1 != 0 {
 				x = ^x
 			}
 
 			return x, i + 1
 		}
 
-		ux |= uint32(b&0x7f) << s
+		ux |= uint32(b & 0x7f) << s
 		s += 7
 	}
 
 	return 0, 0
-}
-
-type readerIterator struct {
-	more    bool
-	current int32
-	reader  io.ByteReader
-}
-
-func NewIteratorFromReader(reader io.ByteReader) ItemIterator {
-	r := &readerIterator{more: true, reader: reader}
-	r.buffer()
-	return r
-}
-
-func (it *readerIterator) buffer() {
-	if it.more {
-		value, err := binary.ReadVarint(it.reader)
-		if err != nil {
-			it.more = false
-		}
-
-		it.current += int32(value)
-	}
-}
-
-func (it *readerIterator) HasMore() bool {
-	return it.more
-}
-
-func (it *readerIterator) Peek() int32 {
-	return it.current
-}
-
-func (it *readerIterator) Next() int32 {
-	value := it.current
-	it.buffer()
-	return value
 }
 
 type negateIterator struct {
@@ -197,12 +190,13 @@ func (it *negateIterator) SkipUntil(val int32) {
 }
 
 type limitIterator struct {
-	remaining int
-	iter      ItemIterator
+	totalCount int
+	remaining  int
+	iter       ItemIterator
 }
 
 func NewLimitIterator(limit int, iter ItemIterator) ItemIterator {
-	return &limitIterator{remaining: limit, iter: iter}
+	return &limitIterator{totalCount: limit, remaining: limit, iter: iter}
 }
 
 func (it *limitIterator) HasMore() bool {
@@ -218,12 +212,8 @@ func (it *limitIterator) Next() int32 {
 	return it.iter.Next()
 }
 
-func IteratorToList(result []int32, iter ItemIterator) []int32 {
-	for iter.HasMore() {
-		result = append(result, iter.Next())
-	}
-
-	return result
+func (it *limitIterator) MaxSize() int {
+	return it.totalCount
 }
 
 type andIterator struct {
@@ -259,6 +249,10 @@ func (it *andIterator) Peek() int32 {
 
 func (it *andIterator) Next() int32 {
 	return it.first.Next()
+}
+
+func (it *andIterator) MaxSize() int {
+	return mathutil.Min(it.first.MaxSize(), it.second.MaxSize())
 }
 
 func (it *andIterator) SkipUntil(val int32) {
@@ -331,6 +325,10 @@ func (it *orIterator) Next() int32 {
 	panic(errors.New("end of iterator"))
 }
 
+func (it *orIterator) MaxSize() int {
+	return it.first.MaxSize() + it.second.MaxSize()
+}
+
 func (it *orIterator) SkipUntil(val int32) {
 	// allow inlining of the methods.
 	for it.HasMore() && it.Peek() < val {
@@ -376,45 +374,13 @@ func (it *diffIterator) Next() int32 {
 	return it.first.Next()
 }
 
+func (it *diffIterator) MaxSize() int {
+	return mathutil.Max(it.first.MaxSize(), it.second.MaxSize())
+}
+
 func (it *diffIterator) SkipUntil(val int32) {
 	// allow inlining of the methods.
 	for it.HasMore() && it.Peek() < val {
 		it.Next()
 	}
-}
-
-type cachingIterator struct {
-	iter ItemIterator
-	next int32
-	more bool
-}
-
-func NewCachingIterator(iter ItemIterator) ItemIterator {
-	i := &cachingIterator{iter: iter, more: true}
-	i.buffer()
-	return i
-}
-
-func (it *cachingIterator) buffer() {
-	if it.more {
-		if it.iter.HasMore() {
-			it.next = it.iter.Next()
-		} else {
-			it.more = false
-		}
-	}
-}
-
-func (it *cachingIterator) HasMore() bool {
-	return it.more
-}
-
-func (it *cachingIterator) Peek() int32 {
-	return it.next
-}
-
-func (it *cachingIterator) Next() int32 {
-	value := it.next
-	it.buffer()
-	return value
 }

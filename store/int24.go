@@ -61,3 +61,19 @@ func (it *int24iterator) SkipUntil(val int32) {
 		it.Next()
 	}
 }
+
+func (it *int24iterator) MaxSize() int {
+	return it.length / 3
+}
+
+func (it *int24iterator) ToSlice() []int32 {
+	intCount := it.length / 3
+	slice := make([]int32, intCount)
+
+	for i := 0; i < intCount; i++ {
+		scratch := (*[3]byte)(unsafe.Pointer(it.bytesPtr + uintptr(3*i)))
+		slice[i] = bytesToInt24(*scratch)
+	}
+
+	return slice
+}

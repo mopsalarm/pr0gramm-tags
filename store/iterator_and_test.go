@@ -2,27 +2,8 @@ package store
 
 import "testing"
 
-type sliceIter struct {
-	values   []int32
-	position int
-}
-
-func (it *sliceIter) HasMore() bool {
-	return it.position < len(it.values)
-}
-
-func (it *sliceIter) Peek() int32 {
-	return it.values[it.position]
-}
-
-func (it *sliceIter) Next() int32 {
-	value := it.values[it.position]
-	it.position += 1
-	return value
-}
-
 func iter(values ...int32) ItemIterator {
-	return &sliceIter{values: values}
+	return &sliceIterator{values: values}
 }
 
 func testIter(t *testing.T, expected ItemIterator, actual ItemIterator) {

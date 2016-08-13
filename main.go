@@ -23,6 +23,7 @@ import (
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
 	"github.com/rcrowley/go-metrics"
 	"github.com/vistarmedia/go-datadog"
+	"math/rand"
 )
 
 var umlautReplacer = strings.NewReplacer("ä", "ae", "ü", "ue", "ö", "oe", "ß", "ss", "-", " ")
@@ -81,6 +82,8 @@ func main() {
 	if opts.Verbose {
 		log.SetLevel(log.DebugLevel)
 	}
+
+	rand.Seed(time.Now().UnixNano())
 
 	if opts.Datadog != "" {
 		startMetricsWithDatadog(opts.Datadog)
@@ -177,18 +180,27 @@ func runBenchmarks(actions *storeActions) {
 	fp, _ := os.Create("/tmp/profile.pprof")
 	pprof.StartCPUProfile(fp)
 
-	bar := pb.StartNew(3000)
-	for i := 0; i < 30; i++ {
-		for j := 0; j < 100; j++ {
+	start := time.Now()
+
+	chunkSize := 30
+	chunkCount := 100
+	queryCount := chunkSize * chunkCount
+
+	bar := pb.StartNew(queryCount)
+	for i := 0; i < chunkCount; i++ {
+		for j := 0; j < chunkSize; j++ {
 			// this query produces only 3 hits, but we need to search nearly all posts.
-			actions.Search("((u:cha0s&f:sfw)-f:top)&webm", 0)
+			// actions.Search("((u:cha0s&f:sfw)-f:top)&webm", 0, false)
+			actions.Search("f:sfw", 0, true)
 		}
 
-		bar.Add(100)
+		bar.Add(chunkSize)
 	}
 
 	pprof.StopCPUProfile()
 	fp.Close()
+
+	log.Info("Time per query: ", time.Since(start) / time.Duration(queryCount))
 }
 
 func withRecovery(name string, fn func()) (err error) {

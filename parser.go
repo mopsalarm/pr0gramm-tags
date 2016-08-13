@@ -51,6 +51,11 @@ func (p *Parser) consume(expect Token) string {
 }
 
 func (p *Parser) Parse() store.ItemIterator {
+	if p.peek() == EOF {
+		p.consume(EOF)
+		return p.makeIter("__all")
+	}
+
 	result := p.parseOrExpr()
 	p.consume(EOF)
 
@@ -99,7 +104,7 @@ func (p *Parser) parseAndExpr() store.ItemIterator {
 func (p *Parser) parseWithoutExpr() store.ItemIterator {
 	result := p.parseBaseExpr()
 
-	if p.peek() == OP_WITHOUT {
+	for p.peek() == OP_WITHOUT {
 		p.consume(OP_WITHOUT)
 
 		second := p.parseBaseExpr()

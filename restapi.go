@@ -19,6 +19,7 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 
 	r.GET("/query/:query", func(c *gin.Context) {
 		query := c.ParamValue("query")
+		shuffle := c.FormValue("shuffle") == "true"
 
 		olderThan := int32(0)
 		if olderThanValue := c.FormValue("older"); olderThanValue != "" {
@@ -29,7 +30,7 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 		}
 
 		start := time.Now()
-		items, err := actions.Search(query, olderThan)
+		items, err := actions.Search(query, olderThan, shuffle)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -47,5 +48,5 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 		c.JSON(http.StatusOK, gin.H{"duration": time.Since(start).String()})
 	})
 
-	r.Run(httpListen)
+	logrus.Fatal(r.Run(httpListen))
 }
