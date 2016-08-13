@@ -18,7 +18,12 @@ type HttpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+type Printer interface {
+	Println(...interface{})
+}
+
 type Client struct {
+	Logger     Printer
 	baseUrl    *url.URL
 	httpClient HttpClient
 }
@@ -35,12 +40,30 @@ func NewClient(httpClient HttpClient, baseUrl string) (*Client, error) {
 	}, nil
 }
 
-func (cl *Client) Search(query string, olderThan int) (*SearchResult, error) {
+type SearchConfig struct {
+	OlderThan int
+	Random    bool
+}
+
+func (cl *Client) Search(query string, config SearchConfig) (*SearchResult, error) {
 	uri := cl.baseUrl.ResolveReference(&url.URL{Path: "/query/" + query})
-	if olderThan > 0 {
-		values := url.Values{}
-		values.Set("older", strconv.Itoa(olderThan))
+
+	// build uri paramters from config
+	values := url.Values{}
+	{
+		if config.OlderThan > 0 {
+			values.Set("older", strconv.Itoa(config.OlderThan))
+		}
+
+		if config.Random {
+			values.Set("random", "true")
+		}
+
 		uri.RawQuery = values.Encode()
+	}
+
+	if cl.Logger != nil {
+		cl.Logger.Println("Query tag api with url: ", uri.String())
 	}
 
 	request, err := http.NewRequest("GET", uri.String(), nil)

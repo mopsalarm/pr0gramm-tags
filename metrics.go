@@ -9,4 +9,3 @@ var metricsUpdaterError = metrics.GetOrRegisterCounter("tags.updater.error", nil
 var metricsKeysCount = metrics.GetOrRegisterGauge("tags.keys.count", nil)
 var metricsSearch = metrics.GetOrRegisterTimer("tags.search", nil)
 var metricsCheckpointError = metrics.GetOrRegisterCounter("tags.checkpoint.error", nil)
-

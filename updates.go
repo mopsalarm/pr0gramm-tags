@@ -6,6 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
+	"time"
 )
 
 type tagInfo struct {
@@ -33,6 +34,7 @@ type postInfo struct {
 	Id            int    `db:"id"`
 	Flags         int    `db:"flags"`
 	Score         int    `db:"score"`
+	CreatedEpoch  int    `db:"created"`
 	Promoted      bool   `db:"promoted"`
 	Username      string `db:"username"`
 	HasText       bool   `db:"has_text"`
@@ -46,6 +48,7 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 		SELECT
 			items.id,
 			items.flags,
+			items.created,
 			items.up - items.down as score,
 			items.promoted != 0 as promoted,
 			lower(items.username) AS username,
@@ -75,14 +78,14 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 		err := queryItems(db, state.LastItemId, itemCount, func(postInfo postInfo) {
 			itemId := int32(-postInfo.Id)
 
-			builder.Push("u:" + CleanString(postInfo.Username), itemId)
+			builder.Push("u:"+CleanString(postInfo.Username), itemId)
 
 			switch {
-			case postInfo.Flags & 1 != 0:
+			case postInfo.Flags&1 != 0:
 				builder.Push("f:sfw", itemId)
-			case postInfo.Flags & 2 != 0:
+			case postInfo.Flags&2 != 0:
 				builder.Push("f:nsfw", itemId)
-			case postInfo.Flags & 4 != 0:
+			case postInfo.Flags&4 != 0:
 				builder.Push("f:nsfl", itemId)
 			}
 
@@ -98,9 +101,13 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 				builder.Push("f:controversial", itemId)
 			}
 
+			created := time.Unix(int64(postInfo.CreatedEpoch), 0)
+			builder.Push(fmt.Sprintf("d:%04d", created.Year()), itemId)
+			builder.Push(fmt.Sprintf("d:%04d:%02d", created.Year(), created.Month()), itemId)
+
 			// sort posts into bins (size 500) by score.
 			// a post with score 1100 will be put into bins 500 and 1000
-			for bin := 1; bin <= postInfo.Score / 500; bin++ {
+			for bin := 1; bin <= postInfo.Score/500; bin++ {
 				label := fmt.Sprintf("s:%d", (500 * bin))
 				builder.Push(label, itemId)
 			}

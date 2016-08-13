@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"bufio"
@@ -11,13 +11,14 @@ type Token string
 
 const (
 	ILLEGAL Token = "ILLEGAL"
-	EOF           = "EOF"
+	EOF = "EOF"
 
-	OP_AND     = "AND"
-	OP_OR      = "OR"
+	OP_AND = "AND"
+	OP_OR = "OR"
 	OP_WITHOUT = "WITHOUT"
+	OP_NOT = "NOT"
 
-	PAR_OPEN  = "("
+	PAR_OPEN = "("
 	PAR_CLOSE = ")"
 
 	WORD = "WORD"
@@ -84,6 +85,10 @@ func (s *Scanner) Scan() (Token, string) {
 
 	if ch == '|' {
 		return OP_OR, "|"
+	}
+
+	if ch == '!' {
+		return OP_NOT, "!"
 	}
 
 	if isLetter(ch) {

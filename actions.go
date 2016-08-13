@@ -1,14 +1,15 @@
 package main
 
 import (
-	"strings"
 	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/jmoiron/sqlx"
-	"github.com/mopsalarm/go-pr0gramm-tags/store"
 	"github.com/cznic/sortutil"
+	"github.com/jmoiron/sqlx"
+	"github.com/mopsalarm/go-pr0gramm-tags/parser"
+	"github.com/mopsalarm/go-pr0gramm-tags/store"
+	"strings"
 )
 
 type Locker struct {
@@ -36,9 +37,10 @@ func withLock(locker sync.Locker, fn func()) {
 
 type storeActions struct {
 	Locker
-	updateLock sync.Mutex
-	store      store.IterStore
-	storeState store.StoreState
+	UseOptimizer bool
+	updateLock   sync.Mutex
+	store        store.IterStore
+	storeState   store.StoreState
 }
 
 func (sa *storeActions) UpdateOnce(db *sqlx.DB) bool {
@@ -92,18 +94,18 @@ func (sa *storeActions) UpdateOnce(db *sqlx.DB) bool {
 
 		if changedKeyCount == 0 {
 			log.Debug("No updates were merged, state is up-to-date.")
-		} else {
-			metricsUpdaterKeysChanged.Inc(changedKeyCount)
-			sa.WithWriteLock(func() {
-				sa.storeState = newState
-
-				log.WithField("duration", time.Since(start)).
-					WithField("keyCount", changedKeyCount).
-					WithField("state", sa.storeState).
-					WithField("memory", sa.store.MemorySize()).
-					Info("Update finished and merged")
-			})
 		}
+
+		metricsUpdaterKeysChanged.Inc(changedKeyCount)
+		sa.WithWriteLock(func() {
+			sa.storeState = newState
+
+			log.WithField("duration", time.Since(start)).
+				WithField("keyCount", changedKeyCount).
+				WithField("state", sa.storeState).
+				WithField("memory", sa.store.MemorySize()).
+				Info("Update finished and merged")
+		})
 	})
 
 	return more
@@ -126,12 +128,24 @@ func (sa *storeActions) WriteCheckpoint(file string) (err error) {
 
 func (sa *storeActions) Search(query string, olderThan int32, shuffle bool) (result []int32, err error) {
 	err = withRecovery("search", func() {
+		queryLowerCase := strings.ToLower(query)
+
+		// parse the query into an ast
+		pr := parser.NewParser(strings.NewReader(queryLowerCase))
+		ast, err := pr.Parse()
+		if err != nil {
+			panic(err)
+		}
+
+		if sa.UseOptimizer {
+			// optimize the ast for maximum performance!!!1
+			ast = parser.Optimize(ast)
+		}
+
 		metricsSearch.Time(func() {
-			queryLowerCase := strings.ToLower(query)
 			sa.WithReadLock(func() {
 				log.WithField("query", query).WithField("older", olderThan).Debug("Start search query")
-
-				parser := NewParser(strings.NewReader(queryLowerCase), func(str string) store.ItemIterator {
+				iter := parser.ToIterator(ast, func(str string) store.ItemIterator {
 					var hash uint32
 					if str != "__all" {
 						if len(str) < 2 || str[1] != ':' {
@@ -144,7 +158,6 @@ func (sa *storeActions) Search(query string, olderThan int32, shuffle bool) (res
 					return sa.store.GetIterator(hash)
 				})
 
-				iter := parser.Parse()
 				switch {
 				case shuffle:
 					iter = store.NewShuffledIterator(iter)

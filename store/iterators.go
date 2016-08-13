@@ -220,8 +220,20 @@ type andIterator struct {
 	first, second ItemIterator
 }
 
-func NewAndIterator(first, second ItemIterator) ItemIterator {
-	return &andIterator{first, second}
+func NewAndIterator(iterators... ItemIterator) ItemIterator {
+	switch {
+	case len(iterators) == 0:
+		return NewEmptyIterator()
+
+	case len(iterators) == 1:
+		return iterators[0]
+
+	case len(iterators) == 2:
+		return &andIterator{iterators[0], iterators[1]}
+
+	default:
+		return NewAndIterator(append([]ItemIterator{NewAndIterator(iterators[0], iterators[1])}, iterators[2:]...)...)
+	}
 }
 
 func (it *andIterator) HasMore() bool {
@@ -266,8 +278,20 @@ type orIterator struct {
 	first, second ItemIterator
 }
 
-func NewOrIterator(first, second ItemIterator) ItemIterator {
-	return &orIterator{first, second}
+func NewOrIterator(iterators... ItemIterator) ItemIterator {
+	switch {
+	case len(iterators) == 0:
+		return NewEmptyIterator()
+
+	case len(iterators) == 1:
+		return iterators[0]
+
+	case len(iterators) == 2:
+		return &orIterator{iterators[0], iterators[1]}
+
+	default:
+		return NewOrIterator(append([]ItemIterator{NewOrIterator(iterators[0], iterators[1])}, iterators[2:]...)...)
+	}
 }
 
 func (it *orIterator) HasMore() bool {
@@ -340,8 +364,20 @@ type diffIterator struct {
 	first, second ItemIterator
 }
 
-func NewDiffIterator(first, second ItemIterator) ItemIterator {
-	return &diffIterator{first, second}
+func NewDiffIterator(iterators... ItemIterator) ItemIterator {
+	switch {
+	case len(iterators) == 0:
+		return NewEmptyIterator()
+
+	case len(iterators) == 1:
+		return iterators[0]
+
+	case len(iterators) == 2:
+		return &diffIterator{iterators[0], iterators[1]}
+
+	default:
+		return NewDiffIterator(iterators[0], NewAndIterator(iterators[1:]...))
+	}
 }
 
 func (it *diffIterator) HasMore() bool {

@@ -19,9 +19,9 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	_ "github.com/lib/pq"
-	"github.com/robfig/cron"
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
 	"github.com/rcrowley/go-metrics"
+	"github.com/robfig/cron"
 	"github.com/vistarmedia/go-datadog"
 	"math/rand"
 )
@@ -71,7 +71,7 @@ func main() {
 		Postgres       string `long:"postgres" default:"postgres://postgres:password@localhost?sslmode=disable" description:"Connection-string for postgres database."`
 		HttpListen     string `long:"http-listen" default:":8080" description:"Listen address for the rest api http server."`
 		Datadog        string `long:"datadog" description:"Pass the datadog api key to enable datadog metrics."`
-		Verbose        bool `long:"verbose" description:"Activate verbose logging"`
+		Verbose        bool   `long:"verbose" description:"Activate verbose logging"`
 	}
 
 	_, err := flags.Parse(&opts)
@@ -88,11 +88,6 @@ func main() {
 	if opts.Datadog != "" {
 		startMetricsWithDatadog(opts.Datadog)
 	}
-
-	db := sqlx.MustConnect("postgres", opts.Postgres)
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
-	db.SetConnMaxLifetime(5 * time.Minute)
 
 	storeState := store.StoreState{}
 	iterStore := store.NewIterStore(nil)
@@ -126,8 +121,9 @@ func main() {
 	}
 
 	actions := &storeActions{
-		store:      iterStore,
-		storeState: storeState,
+		UseOptimizer: true,
+		store:        iterStore,
+		storeState:   storeState,
 	}
 
 	if opts.Benchmark {
@@ -139,36 +135,44 @@ func main() {
 		os.Exit(1)
 	}
 
-	updateJob := preventConcurrency(func() {
-		err := withRecovery("update", func() {
-			for actions.UpdateOnce(db) {
-				// update again!
-			}
-		})
-
-		if err != nil {
-			log.WithError(err).Warn("Error during updating")
-		}
-	})
-
-	// start updating in background now to get the most recent state.
-	go updateJob()
-
 	cr := cron.New()
 
 	cr.AddFunc("@every 6h", preventConcurrency(func() {
 		actions.WriteCheckpoint(opts.CheckpointFile)
 	}))
 
-	cr.AddFunc("@every 15s", updateJob)
 	cr.Start()
+
+	if opts.Postgres != "" {
+		db := sqlx.MustConnect("postgres", opts.Postgres)
+		db.SetMaxOpenConns(1)
+		db.SetMaxIdleConns(1)
+		db.SetConnMaxLifetime(5 * time.Minute)
+
+		updateJob := preventConcurrency(func() {
+			err := withRecovery("update", func() {
+				for actions.UpdateOnce(db) {
+					// update again!
+				}
+			})
+
+			if err != nil {
+				log.WithError(err).Warn("Error during updating")
+			}
+		})
+
+		// start updating in background now to get the most recent state.
+		go updateJob()
+
+		cr.AddFunc("@every 15s", updateJob)
+	}
 
 	restApi(opts.HttpListen, actions, opts.CheckpointFile)
 }
 
 func startMetricsWithDatadog(datadogApiKey string) {
 	metrics.RegisterRuntimeMemStats(metrics.DefaultRegistry)
-	go metrics.CaptureRuntimeMemStats(metrics.DefaultRegistry, 1 * time.Minute)
+	go metrics.CaptureRuntimeMemStats(metrics.DefaultRegistry, 1*time.Minute)
 
 	host, _ := os.Hostname()
 
@@ -200,7 +204,7 @@ func runBenchmarks(actions *storeActions) {
 	pprof.StopCPUProfile()
 	fp.Close()
 
-	log.Info("Time per query: ", time.Since(start) / time.Duration(queryCount))
+	log.Info("Time per query: ", time.Since(start)/time.Duration(queryCount))
 }
 
 func withRecovery(name string, fn func()) (err error) {
