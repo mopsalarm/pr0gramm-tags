@@ -11,18 +11,18 @@ sie über das Userscript verarbeiet wird. Beispielsweise: `? webm -sound|gif`**
 ## Syntax
 
 Es gibt drei Operatoren, um Tags zu einer Suchanfrage zu kombinieren.
-* und: Möchte man nur Suchergebnisse haben, in denen von zwei Ausdrücken beide vorkommen sollen,
+* **und**: Möchte man nur Suchergebnisse haben, in denen von zwei Ausdrücken beide vorkommen sollen,
   können diese mit dem Zeichen `&` verknüpft werden - alternativ funktioniert auch das Wörtchen `and`.
   Um Suchanfragen zu vereinfachen, kann das `&`-Zeichen meistens weggelassen werden. 
   
   Beispiel: `facebook & 9gag`, `facebook and 9gag` sowie `facebook 9gag` findet beides Posts,
   die sowohl den Tag `facebook` als auch den Tag `9gag` enthalten.
   
-* oder: Zwei Ausdrücke können mit dem Zeichen `|` verknüpft werden, um eine Oder-Beziehung herzustellen.
+* **oder**: Zwei Ausdrücke können mit dem Zeichen `|` verknüpft werden, um eine Oder-Beziehung herzustellen.
 
   Beispielsweise: `facebook | 9gag` oder `kadsen or kefer`
 
-* ohne: Um alle Posts zu finden, die auf eine Suchanfrage passen, aber eine andere ausschließen, kann das `-` verwendet werden.
+* **ohne**: Um alle Posts zu finden, die auf eine Suchanfrage passen, aber eine andere ausschließen, kann das `-` verwendet werden.
   Der erste Tag kann dabei weggelassen werden, so dass alle Posts gefunden werden, die einen bestimmten Tag nicht haben.
  
   Einfache Beispiele sind: `webm -sound` (Alle Videos ohne Ton), `-8015-süßvieh`

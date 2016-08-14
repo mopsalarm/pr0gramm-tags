@@ -41,4 +41,9 @@
 
         return orgGet.apply(this, arguments);
     };
+
+    if(/\/\?/.test(decodeURIComponent(p.getLocation() || ""))) {
+        p.navigateTo(p.getLocation(), p.NAVIGATE.FORCE);
+    }
+
 })();
