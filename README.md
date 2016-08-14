@@ -31,7 +31,7 @@ Es gibt einge spezielle Suchwörter:
 * `u:username` Findet Posts des angegeben Benutzers. Für guten Content z.B. `u:mopsalarm`.
 * `f:text` Findet Posts, auf denen Text erkannt wurde.
 * `f:top` Findet Posts in top.
-* `f:controverse` Posts, die als kontrovers eingestuft werden können. Das bedeutet relativ viele Up und Downvotes in einem ausgewogenen Verhältnis.
+* `f:controversial` Posts, die als kontrovers eingestuft werden können. Das bedeutet relativ viele Up und Downvotes in einem ausgewogenen Verhältnis.
 * `f:sfw`, `f:nsfw`, `f:nsfl` Findet Posts mit den entsprechend gesetzten Filtern.
 * `s:500`, `s:1000`, `s:1500`, ... Findet Posts, die eine bestimmte mindeste Beniszahl erreicht haben müssen. Heißt konkreter: `s:1000` zeigt nur Posts an, die mindestenes einen Benis von 1000 besitzen.
 
