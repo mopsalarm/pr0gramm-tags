@@ -53,11 +53,10 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 			items.promoted != 0 as promoted,
 			lower(items.username) AS username,
 			COALESCE(texts.has_text, FALSE) AS has_text,
-			contr.id IS NOT NULL as is_controversial
+			up>60 AND down>60 AND least(up, down)::float/greatest(up, down)>=0.7 as is_controversial
 		FROM
 			items
 			LEFT JOIN items_text texts ON (items.id = texts.item_id)
-			LEFT JOIN controversial contr ON (items.id = contr.item_id)
 		WHERE items.id >= $1 OR to_timestamp(items.created) > CURRENT_TIMESTAMP - interval '1day'
 		ORDER BY items.id ASC LIMIT $2`, firstItemId, itemCount)
 
@@ -119,7 +118,6 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 		if err != nil {
 			log.WithError(err).Warn("Could not fetch the list of post items")
 			metricsUpdaterError.Inc(1)
-			err = nil
 		}
 	}
 

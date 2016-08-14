@@ -74,7 +74,8 @@ func (sa *storeActions) UpdateOnce(db *sqlx.DB) bool {
 			requireUpdate := false
 			notFound := len(storeValues)
 			for _, value := range updateValues {
-				if sortutil.SearchInt32s(storeValues, value) == notFound {
+				idx := sortutil.SearchInt32s(storeValues, value)
+				if idx == notFound || storeValues[idx] != value {
 					requireUpdate = true
 					break
 				}

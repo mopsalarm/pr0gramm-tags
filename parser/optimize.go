@@ -208,6 +208,21 @@ func (ctx *optimizeContext) optSimplifyCancelingOperationAndWithout(node *Node) 
 		}
 	}
 
+	if node.Type == OR && anyNode(node.Children, ofType(WITHOUT)) {
+		for _, termNode := range filterNodes(node.Children, not(ofType(WITHOUT))) {
+			for _, woNode := range filterNodes(node.Children, ofType(WITHOUT)) {
+				if anyNode(woNode.Children[1:], termNode.EqualTo) {
+					// we now know, that termNode cancels itself out inside of the
+					// WITHOUT and the OR. We can remove it from both.
+
+					node.Children = filterNodes(node.Children, not(termNode.EqualTo))
+					woNode.Children = filterNodes(woNode.Children, not(termNode.EqualTo))
+					ctx.markChanged("Remove a term that has no effect in combination with OR/WITHOUT")
+				}
+			}
+		}
+	}
+
 	return node
 }
 

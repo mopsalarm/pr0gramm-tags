@@ -127,6 +127,10 @@ func (p *Parser) parseBaseExpr() (result *Node) {
 	case WORD:
 		result = NewQueryNode(p.consume(WORD))
 
+	case OP_WITHOUT:
+		p.consume(OP_WITHOUT)
+		result = NewOpNode(NOT, p.parseBaseExpr())
+
 	case OP_NOT:
 		p.consume(OP_NOT)
 		result = NewOpNode(NOT, p.parseBaseExpr())
