@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pr0gramm-tags
 // @namespace    http://github.net/mopsalarm/pr0gramm-tags
-// @version      0.1.0
+// @version      0.2.0
 // @description  Allow better searches
 // @author       Mopsalarm
 // @match        http://pr0gramm.com/*
@@ -22,7 +22,16 @@
                 return jQuery.ajax({
                     type: "GET",
                     url: "//app.pr0gramm.com/api/categories/v1/general",
-                    success: success,
+                    success: function (data) {
+                        if (data && data.items) {
+                            data.items.forEach(function (item) {
+                                // dirrty!
+                                item.promoted = item.id;
+                            })
+                        }
+
+                        success(data);
+                    },
                     error: error,
                     dataType: "json",
                     data: opts
