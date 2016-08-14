@@ -25,6 +25,9 @@ private:
 public:
     sequence();
     sequence(const sequence& other) = delete;
+    sequence(sequence&&);
+
+    sequence& operator=(sequence&&);
 
     ~sequence();
 

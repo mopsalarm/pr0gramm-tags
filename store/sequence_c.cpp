@@ -2,9 +2,9 @@
 #include "sequence.hpp"
 
 #include <iostream>
-#include <map>
+#include "map.cpp"
 
-typedef std::map<uint32_t, sequence> map_t;
+typedef small_map<uint32_t, sequence> map_t;
 
 inline map_t& get(store ptr) {
     return *(map_t*) ptr;
@@ -54,22 +54,30 @@ extern "C" {
     }
 
     int store_contains(store map, uint32_t key) {
-        return get(map).find(key) != get(map).end();
+        // return get(map).find(key) != get(map).end();
+        return get(map).contains(key);
     }
 
     uint32_t store_memory_size(store map) {
         uint32_t sum = 0;
-        for(auto&& it : get(map)) {
-            sum += 32 + it.second.memory_size();
+        for(auto&& value : get(map).get_values()) {
+            sum += 32 + value.memory_size();
         }
 
         return sum;
     }
 
     struct byte_view store_get(store st, uint32_t key) {
-        auto&& iter = get(st).find(key);
-        if (iter != get(st).end()) {
-            return get(st)[key].view();
+//        auto&& iter = get(st).find(key);
+//        if (iter != get(st).end()) {
+//            return get(st)[key].view();
+//        } else {
+//            return byte_view{0, nullptr};
+//        }
+
+        auto&& map = get(st);
+        if(map.contains(key)) {
+            return map[key].view();
         } else {
             return byte_view{0, nullptr};
         }
@@ -77,10 +85,9 @@ extern "C" {
 
     int store_keys(store st, uint32_t *keys, int n) {
         int pos = 0;
-
-        for(auto&& entry : get(st)) {
+        for(auto&& key: get(st).get_keys()) {
             if(pos < n) {
-                keys[pos] = entry.first;
+                keys[pos] = key;
                 pos++;
             }
         }

@@ -21,6 +21,34 @@ sequence::sequence() : inline_data(true) {
     d.heap.ptr = nullptr;
 }
 
+sequence::sequence(sequence&& other) {
+    inline_data = other.inline_data;
+    if(inline_data) {
+        std::copy_n(other.d.direct, sizeof(other.d.direct), d.direct);
+    } else {
+        d.heap = other.d.heap;
+    }
+
+    other.inline_data = true;
+    other.d.direct[0] = 0;
+}
+
+sequence& sequence::operator=(sequence&& other) {
+    if (!inline_data) {
+        delete[] d.heap.ptr;
+    }
+
+    inline_data = other.inline_data;
+    if(inline_data) {
+        std::copy_n(other.d.direct, sizeof(other.d.direct), d.direct);
+    } else {
+        d.heap = other.d.heap;
+    }
+
+    other.inline_data = true;
+    other.d.direct[0] = 0;
+}
+
 sequence::~sequence() {
     if (!inline_data) {
         delete[] d.heap.ptr;
