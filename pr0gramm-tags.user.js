@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         pr0gramm-categories
+// @name         pr0gramm-tags
 // @namespace    http://github.net/mopsalarm/pr0gramm-tags
 // @version      0.1.0
 // @description  Allow better searches
