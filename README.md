@@ -42,7 +42,8 @@ Weitere Beispiele:
 * `-f:nsfl & original content & (f:sfw or (f:nsfw - u:nixname))` Alle posts die original content sind, jedoch kein NSFL, und NSFW nur dann, wenn es nicht von *nixname* ist.
 * `s:2000 | (s:500 & (oc | original content))` Alle Posts mit mindestens 2000 Benis sowie OC ab 500 Benis.
 
-
+## Warnung
+Das alles ist Beta und ich gebe keine Garantie, das alles fehlerfrei läuft. Bei Problemen gerne Bescheid sagen.
 
 
 
