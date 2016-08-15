@@ -376,7 +376,7 @@ func NewDiffIterator(iterators... ItemIterator) ItemIterator {
 		return &diffIterator{iterators[0], iterators[1]}
 
 	default:
-		return NewDiffIterator(iterators[0], NewAndIterator(iterators[1:]...))
+		return NewDiffIterator(iterators[0], NewOrIterator(iterators[1:]...))
 	}
 }
 
