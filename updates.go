@@ -38,6 +38,7 @@ type postInfo struct {
 	Promoted      bool   `db:"promoted"`
 	Username      string `db:"username"`
 	HasText       bool   `db:"has_text"`
+	HasAudio      bool   `db:"audio"`
 	Controversial bool   `db:"is_controversial"`
 }
 
@@ -49,6 +50,7 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 			items.id,
 			items.flags,
 			items.created,
+			items.audio,
 			items.up - items.down as score,
 			items.promoted != 0 as promoted,
 			lower(items.username) AS username,
@@ -94,6 +96,10 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 
 			if postInfo.HasText {
 				builder.Push("f:text", itemId)
+			}
+
+			if postInfo.HasAudio {
+				builder.Push("f:sound", itemId)
 			}
 
 			if postInfo.Controversial {
