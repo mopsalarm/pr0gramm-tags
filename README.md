@@ -34,6 +34,9 @@ Es gibt einge spezielle Suchwörter:
 * `f:controversial` Posts, die als kontrovers eingestuft werden können. Das bedeutet relativ viele Up und Downvotes in einem ausgewogenen Verhältnis.
 * `f:sfw`, `f:nsfw`, `f:nsfl` Findet Posts mit den entsprechend gesetzten Filtern.
 * `s:500`, `s:1000`, `s:1500`, ... Findet Posts, die eine bestimmte mindeste Beniszahl erreicht haben müssen. Heißt konkreter: `s:1000` zeigt nur Posts an, die mindestenes einen Benis von 1000 besitzen.
+* `q:hd`, `q:4k`, `q:1080p`, `q:480p`, `q:kartoffel`, `q:sd` filtert nach verschiedenen Qualitätsstufen.
+* `f:sound` Findet nur Posts, die auch wirklich das Audio-Flag gesetzt haben.
+* `f:repost` Findet nur Posts, die mit `repost` getaggt sind. Das Wort muss dabei alleine in einem einzelnen Tag vorkommen, nicht etwa in Kombination wie `kein repost`.
 
 Wie in der Mathematik gilt hier Punkt-vor-Strich, wobei die Verundung stärker bindet als die Veroderung, und diese wiederum stärker bindet, als das Minus. Es können Klammern gesetzt werden.
 
