@@ -6,6 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
+	"strings"
 	"time"
 )
 
@@ -39,6 +40,7 @@ type postInfo struct {
 	Username      string `db:"username"`
 	HasText       bool   `db:"has_text"`
 	HasAudio      bool   `db:"audio"`
+	Width         int    `db:"width"`
 	Controversial bool   `db:"is_controversial"`
 }
 
@@ -51,6 +53,7 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 			items.flags,
 			items.created,
 			items.audio,
+			items.width,
 			items.up - items.down as score,
 			items.promoted != 0 as promoted,
 			lower(items.username) AS username,
@@ -71,13 +74,39 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 	return err
 }
 
+func sizeCategories(width int) []string {
+	switch {
+	case width > 3800:
+		return []string{"2160p", "4k"}
+
+	case width > 1900:
+		return []string{"1080p", "hd"}
+
+	case width > 1200:
+		return []string{"720p", "hd"}
+
+	case width > 600:
+		return []string{"sd"}
+
+	default:
+		return []string{"kartoffel"}
+	}
+}
+
 func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.StoreState, bool) {
 	builder := store.NewStoreBuilder(HashWord)
 
-	itemCount := 20000
+	itemCount := 10000
 	{
 		err := queryItems(db, state.LastItemId, itemCount, func(postInfo postInfo) {
 			itemId := int32(-postInfo.Id)
+
+			// Prefixes currently in-use:
+			//  d: date
+			//  f: flags
+			//  s: score
+			//  u: user
+			//  q: quality
 
 			builder.Push("u:"+CleanString(postInfo.Username), itemId)
 
@@ -106,6 +135,11 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 				builder.Push("f:controversial", itemId)
 			}
 
+			// add quality-tag
+			for _, sizeCategory := range sizeCategories(postInfo.Width) {
+				builder.Push("q:"+sizeCategory, itemId)
+			}
+
 			created := time.Unix(int64(postInfo.CreatedEpoch), 0)
 			builder.Push(fmt.Sprintf("d:%04d", created.Year()), itemId)
 			builder.Push(fmt.Sprintf("d:%04d:%02d", created.Year(), created.Month()), itemId)
@@ -127,11 +161,16 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 		}
 	}
 
-	tagCount := 100000
+	tagCount := 50000
 	{
 		err := queryTags(db, state.LastTagId, tagCount, func(info tagInfo) {
+			itemId := int32(-info.ItemId)
 			for _, word := range ExtractWords(info.Tag) {
-				builder.Push(word, int32(-info.ItemId))
+				builder.Push(word, itemId)
+			}
+
+			if strings.ToLower(info.Tag) == "repost" {
+				builder.Push("f:repost", itemId)
 			}
 
 			tagCount -= 1
