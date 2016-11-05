@@ -3,7 +3,7 @@
 ## Userscript
 
 Das Userscript kann über diesen Link installiert werden:
-https://github.com/mopsalarm/pr0gramm-tags/raw/master/pr0gramm-tags.user.js
+https://github.com/mopsalarm/pr0gramm-tags/raw/master/pr0gramm-tags.user.js (benötigt [tampermonkey für Chrome](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) oder [greasemonkey für Firefox](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/))
 
 **ACHTUNG: Aktuell muss einr Suche ein Fragezeichen vorgestellt werden, damit
 sie über das Userscript verarbeiet wird. Beispielsweise: `? webm -sound|gif`**
