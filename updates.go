@@ -98,7 +98,7 @@ func sizeCategories(width int) []string {
 func userMarkToString(mark int) string {
 	switch mark {
 	case 6:
-		return "ftp"
+		return "ftb"
 	case 1:
 		return "newfag"
 	default:

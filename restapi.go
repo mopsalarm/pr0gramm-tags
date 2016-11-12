@@ -85,5 +85,15 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 		}
 	})
 
+	r.DELETE("/admin/tag/:word", func(c *gin.Context) {
+		words := ExtractWords(c.ParamValue("word"))
+		actions.WithWriteLock(func() {
+			for _, word := range words {
+				hash := HashWord(word)
+				actions.store.Replace(hash, []int32{})
+			}
+		})
+	})
+
 	logrus.Fatal(r.Run(httpListen))
 }
