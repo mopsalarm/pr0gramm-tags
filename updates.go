@@ -173,7 +173,7 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 			}
 
 			// add a label for the real shitty content.
-			if postInfo.Score < 300 {
+			if postInfo.Score < -300 {
 				builder.Push("s:shit", itemId)
 			}
 
