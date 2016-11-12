@@ -18,8 +18,8 @@ type Parser struct {
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
 	parser := &Parser{
-		scanner:  NewScanner(r),
-		next:     buf{tok: ILLEGAL, lit: ""},
+		scanner: NewScanner(r),
+		next:    buf{tok: ILLEGAL, lit: ""},
 	}
 	parser.buffer()
 	return parser
@@ -96,7 +96,7 @@ func (p *Parser) parseOrExpr() *Node {
 func (p *Parser) parseAndExpr() *Node {
 	result := p.parseBaseExpr()
 
-	loop:
+loop:
 	for {
 		tok := p.peek()
 		switch tok {
@@ -141,4 +141,3 @@ func (p *Parser) parseBaseExpr() (result *Node) {
 
 	return
 }
-

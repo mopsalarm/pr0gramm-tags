@@ -38,6 +38,7 @@ type postInfo struct {
 	CreatedEpoch  int    `db:"created"`
 	Promoted      bool   `db:"promoted"`
 	Username      string `db:"username"`
+	UserMark      int    `db:"mark"`
 	HasText       bool   `db:"has_text"`
 	HasAudio      bool   `db:"audio"`
 	Width         int    `db:"width"`
@@ -54,6 +55,7 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 			items.created,
 			items.audio,
 			items.width,
+			items.mark,
 			items.up - items.down as score,
 			items.promoted != 0 as promoted,
 			lower(items.username) AS username,
@@ -93,6 +95,17 @@ func sizeCategories(width int) []string {
 	}
 }
 
+func userMarkToString(mark int) string {
+	switch mark {
+	case 6:
+		return "ftp"
+	case 1:
+		return "newfag"
+	default:
+		return ""
+	}
+}
+
 func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.StoreState, bool) {
 	builder := store.NewStoreBuilder(HashWord)
 
@@ -107,6 +120,7 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 			//  s: score
 			//  u: user
 			//  q: quality
+			//  m: mark (ftb, newfag)
 
 			builder.Push("u:"+CleanString(postInfo.Username), itemId)
 
@@ -117,6 +131,8 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 				builder.Push("f:nsfw", itemId)
 			case postInfo.Flags&4 != 0:
 				builder.Push("f:nsfl", itemId)
+			case postInfo.Flags&8 != 0:
+				builder.Push("f:nsfp", itemId)
 			}
 
 			if postInfo.Promoted {
@@ -135,6 +151,11 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 				builder.Push("f:controversial", itemId)
 			}
 
+			// mark content of ftp and newfags special.
+			if mark := userMarkToString(postInfo.UserMark); mark != "" {
+				builder.Push("m:"+mark, itemId)
+			}
+
 			// add quality-tag
 			for _, sizeCategory := range sizeCategories(postInfo.Width) {
 				builder.Push("q:"+sizeCategory, itemId)
@@ -149,6 +170,11 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 			for bin := 1; bin <= postInfo.Score/500; bin++ {
 				label := fmt.Sprintf("s:%d", (500 * bin))
 				builder.Push(label, itemId)
+			}
+
+			// add a label for the real shitty content.
+			if postInfo.Score < 300 {
+				builder.Push("s:shit", itemId)
 			}
 
 			itemCount -= 1

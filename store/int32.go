@@ -33,7 +33,7 @@ func (it *int32byteIterator) Peek() int32 {
 
 func (it *int32byteIterator) Next() int32 {
 	it.pos += 1
-	return it.intView[it.pos - 1]
+	return it.intView[it.pos-1]
 }
 
 func (it *int32byteIterator) SkipUntil(val int32) {

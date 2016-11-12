@@ -1,12 +1,12 @@
 hash: 639c64718739b32b31737336e5a6e4db1f6e93df239f83a2ac5aea4b72fe9741
-updated: 2016-08-13T11:19:41.139056175+02:00
+updated: 2016-11-12T12:49:08.706034105+01:00
 imports:
 - name: github.com/cznic/mathutil
-  version: 78ad7f262603437f0ecfebc835d80094f89c8f54
+  version: 4609a45a9e61188d0d69a5d8ad42600c3df35002
 - name: github.com/cznic/sortutil
   version: 4c7342852e65c2088c981288f2c5610d10b9f7f4
 - name: github.com/gin-gonic/contrib
-  version: 547e518040cfb96576b507d2f26779ab9c6fc829
+  version: cf28f84316e50a05a59d174b37c26ad9a43a1201
   subpackages:
   - blob/master/ginrus/
   - ginrus
@@ -16,15 +16,15 @@ imports:
   - binding
   - render
 - name: github.com/jessevdk/go-flags
-  version: f2785f5820ec967043de79c8be97edfc464ca745
+  version: 37c8226983775d404b6edfebd44be1078bd0fe95
 - name: github.com/jmoiron/sqlx
-  version: 7396209bbeada6a4fcc28aa9408f89b2e71cac39
+  version: 05b81a7d5d38058e42148dc01f17daf4acba4640
   subpackages:
   - reflectx
 - name: github.com/julienschmidt/httprouter
   version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
 - name: github.com/lib/pq
-  version: 80f8150043c80fb52dee6bc863a709cdac7ec8f8
+  version: d8eeeb8bae8896dd8e1b7e514ab0d396c4f12a1b
   subpackages:
   - oid
 - name: github.com/manucorporat/sse
@@ -34,7 +34,7 @@ imports:
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
 - name: github.com/rcrowley/go-metrics
-  version: bdb33529eca3e55eac7328e07c57012a797af602
+  version: ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8
 - name: github.com/robfig/cron
   version: b024fc5ea0e34bc3f83d9941c8d60b0622bfaca4
 - name: github.com/Sirupsen/logrus
@@ -46,11 +46,11 @@ imports:
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
   - unix
 - name: gopkg.in/bluesuncorp/validator.v5
   version: d5acf1dac43705f8bfbb71d878e290e2bed3950b
 - name: gopkg.in/cheggaaa/pb.v1
-  version: 9453b2db37f4d8bc63751daca63bbe7049eb5e74
+  version: dd61faab99a777c652bb680e37715fe0cb549856
 testImports: []

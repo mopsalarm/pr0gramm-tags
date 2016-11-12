@@ -33,7 +33,7 @@ func Optimize(root *Node) *Node {
 			}
 		}
 
-		if ! changed {
+		if !changed {
 			break
 		}
 	}
@@ -185,7 +185,7 @@ func (ctx *optimizeContext) optSimplifyChildren(node *Node) *Node {
 
 	case WITHOUT:
 		children := deduplicate(filterNodes(node.Children[1:], not(EmptyQueryNode.EqualTo)))
-		if len(children) != len(node.Children) - 1 {
+		if len(children) != len(node.Children)-1 {
 			node.Children = append(node.Children[:1], children...)
 		}
 	}
@@ -257,7 +257,7 @@ func (ctx *optimizeContext) optMoveWithoutOutOfAnd(node *Node) *Node {
 				ctx.markChanged("Moving WITHOUT out of an AND")
 
 				// remove the without node and add its children to the and node.
-				node.Children = append(node.Children[:idx], node.Children[idx + 1:]...)
+				node.Children = append(node.Children[:idx], node.Children[idx+1:]...)
 				node.Children = append(node.Children, child.Children[0])
 				SortNodesInPlace(node.Children)
 				return NewOpNode(WITHOUT, node, child.Children[1:]...)

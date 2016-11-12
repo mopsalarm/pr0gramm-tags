@@ -147,16 +147,16 @@ func fastVarint32(buf []byte) (int32, int) {
 				return 0, -(i + 1) // overflow
 			}
 
-			ux = ux | uint32(b) << s
+			ux = ux | uint32(b)<<s
 			x := int32(ux >> 1)
-			if ux & 1 != 0 {
+			if ux&1 != 0 {
 				x = ^x
 			}
 
 			return x, i + 1
 		}
 
-		ux |= uint32(b & 0x7f) << s
+		ux |= uint32(b&0x7f) << s
 		s += 7
 	}
 
@@ -220,7 +220,7 @@ type andIterator struct {
 	first, second ItemIterator
 }
 
-func NewAndIterator(iterators... ItemIterator) ItemIterator {
+func NewAndIterator(iterators ...ItemIterator) ItemIterator {
 	switch {
 	case len(iterators) == 0:
 		return NewEmptyIterator()
@@ -278,7 +278,7 @@ type orIterator struct {
 	first, second ItemIterator
 }
 
-func NewOrIterator(iterators... ItemIterator) ItemIterator {
+func NewOrIterator(iterators ...ItemIterator) ItemIterator {
 	switch {
 	case len(iterators) == 0:
 		return NewEmptyIterator()
@@ -364,7 +364,7 @@ type diffIterator struct {
 	first, second ItemIterator
 }
 
-func NewDiffIterator(iterators... ItemIterator) ItemIterator {
+func NewDiffIterator(iterators ...ItemIterator) ItemIterator {
 	switch {
 	case len(iterators) == 0:
 		return NewEmptyIterator()

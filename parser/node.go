@@ -1,16 +1,16 @@
 package parser
 
 import (
-	"sort"
 	"github.com/cznic/sortutil"
+	"sort"
 )
 
 const (
-	AND NodeType = "AND"
-	OR = "OR"
-	WITHOUT = "WITHOUT"
-	NOT = "NOT"
-	QUERY = "QUERY"
+	AND     NodeType = "AND"
+	OR               = "OR"
+	WITHOUT          = "WITHOUT"
+	NOT              = "NOT"
+	QUERY            = "QUERY"
 )
 
 type NodeType string
@@ -18,7 +18,7 @@ type NodeMatcher func(*Node) bool
 
 type Node struct {
 	Type     NodeType
-	Query    string `json:",omitempty"`
+	Query    string  `json:",omitempty"`
 	Children []*Node `json:",omitempty"`
 }
 
@@ -40,7 +40,7 @@ func (node *Node) EqualTo(other *Node) bool {
 	}
 
 	for idx, child := range node.Children {
-		if ! child.EqualTo(other.Children[idx]) {
+		if !child.EqualTo(other.Children[idx]) {
 			return false
 		}
 	}
@@ -81,7 +81,7 @@ func NewQueryNode(query string) *Node {
 	return &Node{Type: QUERY, Query: query}
 }
 
-func NewOpNode(nodeType NodeType, child *Node, children... *Node) *Node {
+func NewOpNode(nodeType NodeType, child *Node, children ...*Node) *Node {
 	return &Node{Type: nodeType, Children: append([]*Node{child}, children...)}
 }
 
@@ -90,7 +90,7 @@ var EmptyQueryNode = NewQueryNode("__empty")
 
 func everyNode(nodes []*Node, matcher NodeMatcher) bool {
 	for _, child := range nodes {
-		if ! matcher(child) {
+		if !matcher(child) {
 			return false
 		}
 	}
@@ -125,7 +125,7 @@ func deduplicate(nodes []*Node) []*Node {
 
 func not(matcher NodeMatcher) NodeMatcher {
 	return func(node *Node) bool {
-		return ! matcher(node)
+		return !matcher(node)
 	}
 }
 
@@ -152,4 +152,3 @@ func (s NodePtrSlice) Less(i, j int) bool {
 func (s NodePtrSlice) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-

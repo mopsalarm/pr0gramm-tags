@@ -7,7 +7,7 @@ import (
 
 func shuffleOne(values []int32, i int) {
 	// choose index uniformly in [i, N-1]
-	r := i + rand.Intn(len(values) - i)
+	r := i + rand.Intn(len(values)-i)
 	values[r], values[i] = values[i], values[r]
 }
 
@@ -21,7 +21,7 @@ func NewShuffledIterator(iter ItemIterator) ItemIterator {
 	values := IteratorToList(nil, iter)
 
 	result := &it32shuffleIter{
-		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
+		rng:    rand.New(rand.NewSource(time.Now().UnixNano())),
 		values: values,
 	}
 
@@ -47,7 +47,7 @@ func (it *it32shuffleIter) Peek() int32 {
 func (it *it32shuffleIter) Next() int32 {
 	// but return the "current" previous
 	it.advance()
-	return it.values[it.pos - 1]
+	return it.values[it.pos-1]
 }
 
 func (it *it32shuffleIter) MaxSize() int {

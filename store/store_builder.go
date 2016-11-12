@@ -9,7 +9,7 @@ type Hasher func(string) uint32
 
 type StoreBuilder struct {
 	ShowProgress bool
-	hasher Hasher
+	hasher       Hasher
 	byteStore    ByteStore
 	iterStore    *iterStore
 }
@@ -17,7 +17,7 @@ type StoreBuilder struct {
 func NewStoreBuilder(hasher Hasher) *StoreBuilder {
 	byteStore := NewByteStore()
 	return &StoreBuilder{
-		hasher: hasher,
+		hasher:    hasher,
 		byteStore: byteStore,
 		iterStore: &iterStore{byteStore},
 	}

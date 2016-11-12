@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"github.com/mopsalarm/go-pr0gramm-tags/store"
 	"fmt"
+	"github.com/mopsalarm/go-pr0gramm-tags/store"
 )
 
 type IteratorFactory func(string) store.ItemIterator
@@ -41,4 +41,3 @@ func nodesToIterator(nodes []*Node, makeIter IteratorFactory) []store.ItemIterat
 
 	return children
 }
-

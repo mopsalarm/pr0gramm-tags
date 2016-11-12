@@ -1,16 +1,16 @@
 package tagsapi
 
 import (
-	"net/http"
-	"net/url"
-	"io/ioutil"
 	"encoding/json"
 	"io"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"strconv"
 )
 
 type SearchResult struct {
-	Duration string `json:"duration"`
+	Duration string  `json:"duration"`
 	Items    []int32 `json:"items"`
 }
 
@@ -35,7 +35,7 @@ func NewClient(httpClient HttpClient, baseUrl string) (*Client, error) {
 	}
 
 	return &Client{
-		baseUrl: parsed,
+		baseUrl:    parsed,
 		httpClient: httpClient,
 	}, nil
 }

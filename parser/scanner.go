@@ -11,14 +11,14 @@ type Token string
 
 const (
 	ILLEGAL Token = "ILLEGAL"
-	EOF = "EOF"
+	EOF           = "EOF"
 
-	OP_AND = "AND"
-	OP_OR = "OR"
+	OP_AND     = "AND"
+	OP_OR      = "OR"
 	OP_WITHOUT = "WITHOUT"
-	OP_NOT = "NOT"
+	OP_NOT     = "NOT"
 
-	PAR_OPEN = "("
+	PAR_OPEN  = "("
 	PAR_CLOSE = ")"
 
 	WORD = "WORD"

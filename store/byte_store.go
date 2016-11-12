@@ -83,7 +83,7 @@ func (store *cppStore) Get(key uint32) []byte {
 	bv := C.store_get(store.p, C.uint32_t(key))
 	length := int(bv.length)
 
-	if length > 1 << 24 {
+	if length > 1<<24 {
 		panic(fmt.Errorf("Sequence is too long (%dbyte).", length))
 	}
 

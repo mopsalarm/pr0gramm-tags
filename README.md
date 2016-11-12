@@ -36,7 +36,9 @@ Es gibt einge spezielle Suchwörter:
 * `f:sound` Findet nur Posts, die auch wirklich das Audio-Flag gesetzt haben.
 * `f:repost` Findet nur Posts, die mit `repost` getaggt sind. Das Wort muss dabei alleine in einem einzelnen Tag vorkommen, nicht etwa in Kombination wie `kein repost`.
 * `s:500`, `s:1000`, `s:1500`, ... Findet Posts, die eine bestimmte mindeste Beniszahl erreicht haben müssen. Heißt konkreter: `s:1000` zeigt nur Posts an, die mindestenes einen Benis von 1000 besitzen.
+* `s:shit` Für den wirklich schlechten Content mit Benis kleiner als 300.
 * `q:hd`, `q:4k`, `q:1080p`, `q:480p`, `q:kartoffel`, `q:sd` filtert nach verschiedenen Qualitätsstufen.
+* `m:ftp`, `m:newfag` für Content von Fliesentischbesitzern und Newfags.
 
 Außerdem kann nach Datum gesucht werden: 
 * `d:2014` Findet nur Posts aus 2014.
