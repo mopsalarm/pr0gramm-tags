@@ -161,14 +161,15 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 				builder.Push("q:"+sizeCategory, itemId)
 			}
 
+			// date tags
 			created := time.Unix(int64(postInfo.CreatedEpoch), 0)
 			builder.Push(fmt.Sprintf("d:%04d", created.Year()), itemId)
 			builder.Push(fmt.Sprintf("d:%04d:%02d", created.Year(), created.Month()), itemId)
 
-			// sort posts into bins (size 500) by score.
-			// a post with score 1100 will be put into bins 500 and 1000
-			for bin := 1; bin <= postInfo.Score/500; bin++ {
-				label := fmt.Sprintf("s:%d", (500 * bin))
+			// sort posts into bins (size 100) by score.
+			// a post with score 1125 will be put into bins 100, 200,... and 1100
+			for bin := 1; bin <= postInfo.Score/100; bin++ {
+				label := fmt.Sprintf("s:%d", (100 * bin))
 				builder.Push(label, itemId)
 			}
 
