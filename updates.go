@@ -45,10 +45,10 @@ type postInfo struct {
 	Controversial bool   `db:"is_controversial"`
 }
 
-func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)) error {
+func queryItems(db *sqlx.DB, firstItemId, days, itemCount int, consumer func(postInfo)) error {
 	var postInfos []postInfo
 
-	err := db.Select(&postInfos, `
+	err := db.Select(&postInfos, fmt.Sprintf(`
 		SELECT
 			items.id,
 			items.flags,
@@ -64,8 +64,8 @@ func queryItems(db *sqlx.DB, firstItemId, itemCount int, consumer func(postInfo)
 		FROM
 			items
 			LEFT JOIN items_text texts ON (items.id = texts.item_id)
-		WHERE items.id >= $1 OR to_timestamp(items.created) > CURRENT_TIMESTAMP - interval '1day'
-		ORDER BY items.id ASC LIMIT $2`, firstItemId, itemCount)
+		WHERE items.id >= $1 OR to_timestamp(items.created) > CURRENT_TIMESTAMP - interval '%d days'
+		ORDER BY items.id ASC LIMIT $2`, days), firstItemId, itemCount)
 
 	if err == nil {
 		for _, postInfo := range postInfos {
@@ -109,9 +109,10 @@ func userMarkToString(mark int) string {
 func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.StoreState, bool) {
 	builder := store.NewStoreBuilder(HashWord)
 
-	itemCount := 10000
+	itemCount := 15000
 	{
-		err := queryItems(db, state.LastItemId, itemCount, func(postInfo postInfo) {
+		days := 7
+		err := queryItems(db, state.LastItemId, days, itemCount, func(postInfo postInfo) {
 			itemId := int32(-postInfo.Id)
 
 			// Prefixes currently in-use:
