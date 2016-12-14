@@ -238,12 +238,18 @@ func (ctx *optimizeContext) optImplementNotUsingWithout(node *Node) *Node {
 var nodeSfw = NewQueryNode("f:sfw")
 var nodeNsfw = NewQueryNode("f:nsfw")
 var nodeNsfl = NewQueryNode("f:nsfl")
+var nodeNsfp = NewQueryNode("f:nsfp")
 
 func (ctx *optimizeContext) optSimplifyFlags(node *Node) *Node {
-	if node.Type == OR && len(node.Children) == 2 {
-		if node.Children[0].EqualTo(nodeNsfw) && node.Children[1].EqualTo(nodeSfw) {
-			ctx.markChanged("Replace nsfw/sfw with NOT nsfl")
+	if node.Type == OR && len(node.Children) == 3 {
+		if node.Children[0].EqualTo(nodeNsfp) && node.Children[1].EqualTo(nodeNsfw) && node.Children[2].EqualTo(nodeSfw) {
+			ctx.markChanged("Replace nsfp/nsfw/sfw with NOT nsfl")
 			return NewOpNode(NOT, nodeNsfl)
+		}
+
+		if node.Children[0].EqualTo(nodeNsfl) && node.Children[1].EqualTo(nodeNsfw) && node.Children[2].EqualTo(nodeSfw) {
+			ctx.markChanged("Replace nsfl/nsfw/sfw with NOT nsfp")
+			return NewOpNode(NOT, nodeNsfp)
 		}
 	}
 
