@@ -2,8 +2,9 @@ package: github.com/mopsalarm/go-pr0gramm-tags
 import:
 - package: github.com/cznic/sortutil
 - package: gopkg.in/cheggaaa/pb.v1
+  version: 1.0.7
 - package: github.com/gin-gonic/gin
-  version: v1.0rc1
+  version: 1.1.4
 - package: github.com/julienschmidt/httprouter
   version: ~1.1.0
 - package: github.com/jmoiron/sqlx
@@ -11,11 +12,16 @@ import:
 - package: github.com/robfig/cron
   version: ~1.0.0
 - package: github.com/jessevdk/go-flags
+  version: 1.1
 - package: github.com/Sirupsen/logrus
-  version: ~0.10.0
+  version: 0.11.2
 - package: github.com/rcrowley/go-metrics
+  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
 - package: github.com/vistarmedia/go-datadog
+  version: d05578420bfaf173df31fc00580f57b904df6222
 - package: github.com/gin-gonic/contrib
   subpackages:
   - blob/master/ginrus/
+
 - package: github.com/cznic/mathutil
+  version: 4609a45a9e61188d0d69a5d8ad42600c3df35002

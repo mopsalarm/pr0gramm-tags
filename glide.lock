@@ -1,5 +1,5 @@
-hash: 639c64718739b32b31737336e5a6e4db1f6e93df239f83a2ac5aea4b72fe9741
-updated: 2016-11-12T12:49:08.706034105+01:00
+hash: f8ed6fa71f1f35f7cc7f6168aa31f232034aa2f1738426ef1b765a75377de69a
+updated: 2017-02-08T18:18:42.193369205+01:00
 imports:
 - name: github.com/cznic/mathutil
   version: 4609a45a9e61188d0d69a5d8ad42600c3df35002
@@ -11,12 +11,16 @@ imports:
   - blob/master/ginrus/
   - ginrus
 - name: github.com/gin-gonic/gin
-  version: 9163ee543d3f1fab9b0ad8cdf6dc2a6ec2c07dbb
+  version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
   subpackages:
   - binding
   - render
+- name: github.com/golang/protobuf
+  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
+  subpackages:
+  - proto
 - name: github.com/jessevdk/go-flags
-  version: 37c8226983775d404b6edfebd44be1078bd0fe95
+  version: 8bc97d602c3bfeb5fc6fc9b5a9c898f245495637
 - name: github.com/jmoiron/sqlx
   version: 05b81a7d5d38058e42148dc01f17daf4acba4640
   subpackages:
@@ -28,29 +32,31 @@ imports:
   subpackages:
   - oid
 - name: github.com/manucorporat/sse
-  version: c574f6c50c8594f93d28b03a1bbd87b4a3899093
-- name: github.com/mattn/go-colorable
-  version: 043ae16291351db8465272edf465c9f388161627
+  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+- name: github.com/mattn/go-runewidth
+  version: 14207d285c6c197daabb5c9793d63e7af9ab2d50
 - name: github.com/rcrowley/go-metrics
-  version: ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8
+  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
 - name: github.com/robfig/cron
   version: b024fc5ea0e34bc3f83d9941c8d60b0622bfaca4
 - name: github.com/Sirupsen/logrus
-  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
+  version: c078b1e43f58d563c74cebe63c85789e76ddb627
 - name: github.com/vistarmedia/go-datadog
   version: d05578420bfaf173df31fc00580f57b904df6222
 - name: golang.org/x/net
-  version: 84ba27dd5b2d8135e9da1395277f2c9333a2ffda
+  version: f315505cf3349909cdf013ea56690da34e96a451
   subpackages:
   - context
 - name: golang.org/x/sys
   version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
   - unix
-- name: gopkg.in/bluesuncorp/validator.v5
-  version: d5acf1dac43705f8bfbb71d878e290e2bed3950b
 - name: gopkg.in/cheggaaa/pb.v1
-  version: dd61faab99a777c652bb680e37715fe0cb549856
+  version: d7e6ca3010b6f084d8056847f55d7f572f180678
+- name: gopkg.in/go-playground/validator.v8
+  version: c193cecd124b5cc722d7ee5538e945bdb3348435
+- name: gopkg.in/yaml.v2
+  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
 testImports: []

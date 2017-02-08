@@ -15,11 +15,11 @@ import (
 
 func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 	searchHandler := func(c *gin.Context) {
-		query := c.ParamValue("query")
-		random := c.FormValue("random") == "true"
+		query := c.Param("query")
+		random := c.Query("random") == "true"
 
 		olderThan := int32(0)
-		if olderThanValue := c.FormValue("older"); olderThanValue != "" {
+		if olderThanValue := c.Query("older"); olderThanValue != "" {
 			value, err := strconv.ParseInt(olderThanValue, 10, 32)
 			if err == nil {
 				olderThan = int32(value)
@@ -43,6 +43,10 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 	r.Use(gin.Recovery())
 	r.Use(ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true))
 
+	r.GET("/ping", func(c*gin.Context) {
+		c.AbortWithStatus(http.StatusOK)
+	})
+
 	r.GET("/query/", searchHandler)
 	r.GET("/query/:query", searchHandler)
 
@@ -65,7 +69,7 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 	})
 
 	r.GET("/admin/parse/:query", func(c *gin.Context) {
-		p := parser.NewParser(bytes.NewBufferString(c.ParamValue("query")))
+		p := parser.NewParser(bytes.NewBufferString(c.Param("query")))
 
 		tree, err := p.Parse()
 		if err != nil {
@@ -80,13 +84,13 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 	})
 
 	r.POST("/admin/config", func(c *gin.Context) {
-		if value := c.FormValue("optimize"); value != "" {
+		if value := c.PostForm("optimize"); value != "" {
 			actions.UseOptimizer = value == "true"
 		}
 	})
 
 	r.DELETE("/admin/tag/:word", func(c *gin.Context) {
-		words := ExtractWords(c.ParamValue("word"))
+		words := ExtractWords(c.Param("word"))
 		actions.WithWriteLock(func() {
 			for _, word := range words {
 				hash := HashWord(word)
