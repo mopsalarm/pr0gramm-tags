@@ -153,6 +153,8 @@ func main() {
 			err := withRecovery("update", func() {
 				for actions.UpdateOnce(db) {
 					// update again!
+					log.Info("UpdateOnce expects more data, calling it again")
+					time.Sleep(1 * time.Second)
 				}
 			})
 

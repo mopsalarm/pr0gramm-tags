@@ -111,7 +111,7 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 
 	itemCount := 15000
 	{
-		days := 7
+		days := 3
 		err := queryItems(db, state.LastItemId, days, itemCount, func(postInfo postInfo) {
 			itemId := int32(-postInfo.Id)
 

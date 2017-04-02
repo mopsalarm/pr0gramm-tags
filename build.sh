@@ -2,6 +2,8 @@
 
 set -e
 
+go fmt $(go list | grep -v /vendor/)
+
 glide install
 go build -a
 

@@ -43,7 +43,7 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 	r.Use(gin.Recovery())
 	r.Use(ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true))
 
-	r.GET("/ping", func(c*gin.Context) {
+	r.GET("/ping", func(c *gin.Context) {
 		c.AbortWithStatus(http.StatusOK)
 	})
 
