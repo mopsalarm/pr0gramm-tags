@@ -58,7 +58,7 @@ func restApi(httpListen string, actions *storeActions, checkpointFile string) {
 
 	r.POST("/admin/rebuild-items", func(c *gin.Context) {
 		actions.WithWriteLock(func() {
-			actions.storeState.LastItemId = 0
+			actions.storeState.LastItemUpdateTime = time.Unix(0, 0)
 		})
 	})
 

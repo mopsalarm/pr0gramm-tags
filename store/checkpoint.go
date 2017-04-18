@@ -13,8 +13,8 @@ import (
 var byteOrder = binary.BigEndian
 
 type StoreState struct {
-	LastTagId  int
-	LastItemId int
+	LastTagId          int
+	LastItemUpdateTime time.Time
 }
 
 func WriteCheckpoint(writer io.Writer, state StoreState, store IterStore) error {

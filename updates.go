@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
-	"strings"
-	"time"
 )
 
 type tagInfo struct {
@@ -32,25 +32,27 @@ func queryTags(db *sqlx.DB, firstTagId, count int, consumer func(tagInfo)) error
 }
 
 type postInfo struct {
-	Id            int    `db:"id"`
-	Flags         int    `db:"flags"`
-	Score         int    `db:"score"`
-	CreatedEpoch  int    `db:"created"`
-	Promoted      bool   `db:"promoted"`
-	Username      string `db:"username"`
-	UserMark      int    `db:"mark"`
-	HasText       bool   `db:"has_text"`
-	HasAudio      bool   `db:"audio"`
-	Width         int    `db:"width"`
-	Controversial bool   `db:"is_controversial"`
+	Id            int       `db:"id"`
+	Updated       time.Time `db:"updated"`
+	Flags         int       `db:"flags"`
+	Score         int       `db:"score"`
+	CreatedEpoch  int       `db:"created"`
+	Promoted      bool      `db:"promoted"`
+	Username      string    `db:"username"`
+	UserMark      int       `db:"mark"`
+	HasText       bool      `db:"has_text"`
+	HasAudio      bool      `db:"audio"`
+	Width         int       `db:"width"`
+	Controversial bool      `db:"is_controversial"`
 }
 
-func queryItems(db *sqlx.DB, firstItemId, days, itemCount int, consumer func(postInfo)) error {
+func queryItems(db *sqlx.DB, updatedAfter time.Time, days, itemCount int, consumer func(postInfo)) error {
 	var postInfos []postInfo
 
-	err := db.Select(&postInfos, fmt.Sprintf(`
+	err := db.Select(&postInfos, `
 		SELECT
 			items.id,
+			items.updated,
 			items.flags,
 			items.created,
 			items.audio,
@@ -64,8 +66,7 @@ func queryItems(db *sqlx.DB, firstItemId, days, itemCount int, consumer func(pos
 		FROM
 			items
 			LEFT JOIN items_text texts ON (items.id = texts.item_id)
-		WHERE items.id >= $1 OR to_timestamp(items.created) > CURRENT_TIMESTAMP - interval '%d days'
-		ORDER BY items.id ASC LIMIT $2`, days), firstItemId, itemCount)
+		WHERE items.updated >= $1 ORDER BY items.updated ASC LIMIT $2`, updatedAfter, itemCount)
 
 	if err == nil {
 		for _, postInfo := range postInfos {
@@ -109,10 +110,10 @@ func userMarkToString(mark int) string {
 func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.StoreState, bool) {
 	builder := store.NewStoreBuilder(HashWord)
 
-	itemCount := 15000
+	itemCount := 10000
 	{
 		days := 3
-		err := queryItems(db, state.LastItemId, days, itemCount, func(postInfo postInfo) {
+		err := queryItems(db, state.LastItemUpdateTime, days, itemCount, func(postInfo postInfo) {
 			itemId := int32(-postInfo.Id)
 
 			// Prefixes currently in-use:
@@ -180,7 +181,7 @@ func FetchUpdates(db *sqlx.DB, state store.StoreState) (store.IterStore, store.S
 			}
 
 			itemCount -= 1
-			state.LastItemId = postInfo.Id
+			state.LastItemUpdateTime = postInfo.Updated
 		})
 
 		if err != nil {

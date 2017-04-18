@@ -64,8 +64,6 @@ func preventConcurrency(fn func()) func() {
 
 func main() {
 	var opts struct {
-		RebuildItems   bool   `long:"rebuild-items" description:"Rescans all item infos from the database."`
-		RebuildTags    bool   `long:"rebuild-tags" description:"Rescans all tag infos from the database."`
 		Benchmark      bool   `long:"benchmark" description:"Execute a 'slow' query a lot of times."`
 		CheckpointFile string `long:"checkpoint-file" default:"/tmp/checkpoint.store" description:"Filename of the checkpoint file to read and write."`
 		Postgres       string `long:"postgres" default:"postgres://postgres:password@localhost?sslmode=disable" description:"Connection-string for postgres database."`
@@ -108,17 +106,6 @@ func main() {
 	// run garbage collection to cleanup all the stuff after setup
 	log.Debug("Running garbage collection now.")
 	runtime.GC()
-
-	// do we maybe want to rebuild?
-	if opts.RebuildItems {
-		log.Info("Will re-read all items.")
-		storeState.LastItemId = 0
-	}
-
-	if opts.RebuildTags {
-		log.Info("Will re-read all tags.")
-		storeState.LastTagId = 0
-	}
 
 	actions := &storeActions{
 		UseOptimizer: true,
