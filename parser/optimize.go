@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 func Optimize(root *Node) *Node {

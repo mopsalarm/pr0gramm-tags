@@ -9,20 +9,20 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/cznic/sortutil"
 	"github.com/jmoiron/sqlx"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/cheggaaa/pb.v1"
 
 	"runtime/pprof"
 	"sync/atomic"
 
+	"github.com/eSailors/go-datadog"
 	"github.com/jessevdk/go-flags"
 	_ "github.com/lib/pq"
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
 	"github.com/rcrowley/go-metrics"
 	"github.com/robfig/cron"
-	"github.com/vistarmedia/go-datadog"
 	"math/rand"
 )
 

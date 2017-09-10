@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"bytes"
-	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
 	"github.com/mopsalarm/go-pr0gramm-tags/parser"
 	"github.com/mopsalarm/go-pr0gramm-tags/tagsapi"
+	"github.com/sirupsen/logrus"
 	"strconv"
 )
 

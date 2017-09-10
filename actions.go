@@ -4,11 +4,11 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/cznic/sortutil"
 	"github.com/jmoiron/sqlx"
 	"github.com/mopsalarm/go-pr0gramm-tags/parser"
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
+	log "github.com/sirupsen/logrus"
 	"strings"
 )
 

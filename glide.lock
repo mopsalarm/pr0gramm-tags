@@ -1,62 +1,67 @@
-hash: f8ed6fa71f1f35f7cc7f6168aa31f232034aa2f1738426ef1b765a75377de69a
-updated: 2017-02-08T18:18:42.193369205+01:00
+hash: e70d3e3792b6b2415ab779ff2c8ac877fbc8002c42020a6bda663a2a74728864
+updated: 2017-09-10T11:28:23.219911042+02:00
 imports:
 - name: github.com/cznic/mathutil
-  version: 4609a45a9e61188d0d69a5d8ad42600c3df35002
+  version: 91af0ce59d1753e5eeaa6a3fd8f7aeeba01f1210
 - name: github.com/cznic/sortutil
   version: 4c7342852e65c2088c981288f2c5610d10b9f7f4
+- name: github.com/eSailors/go-datadog
+  version: 289f416d3143030b6d5cfd1bd469b11a0ac9d9e9
+- name: github.com/gin-contrib/sse
+  version: 22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae
 - name: github.com/gin-gonic/contrib
-  version: cf28f84316e50a05a59d174b37c26ad9a43a1201
+  version: 0f937ce6d016f44b2f5b1f03787e055977e7c0b8
   subpackages:
   - blob/master/ginrus/
   - ginrus
 - name: github.com/gin-gonic/gin
-  version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
+  version: d459835d2b077e44f7c9b453505ee29881d5d12d
   subpackages:
   - binding
   - render
 - name: github.com/golang/protobuf
-  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
+  version: 17ce1425424ab154092bbb43af630bd647f3bb0d
   subpackages:
   - proto
 - name: github.com/jessevdk/go-flags
-  version: 8bc97d602c3bfeb5fc6fc9b5a9c898f245495637
+  version: 96dc06278ce32a0e9d957d590bb987c81ee66407
 - name: github.com/jmoiron/sqlx
-  version: 05b81a7d5d38058e42148dc01f17daf4acba4640
+  version: d9bd385d68c068f1fabb5057e3dedcbcbb039d0f
   subpackages:
   - reflectx
 - name: github.com/julienschmidt/httprouter
   version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
 - name: github.com/lib/pq
-  version: d8eeeb8bae8896dd8e1b7e514ab0d396c4f12a1b
+  version: e42267488fe361b9dc034be7a6bffef5b195bceb
   subpackages:
   - oid
-- name: github.com/manucorporat/sse
-  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/mattn/go-isatty
-  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+  version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/mattn/go-runewidth
-  version: 14207d285c6c197daabb5c9793d63e7af9ab2d50
+  version: 97311d9f7767e3d6f422ea06661bc2c7a19e8a5d
 - name: github.com/rcrowley/go-metrics
   version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
 - name: github.com/robfig/cron
   version: b024fc5ea0e34bc3f83d9941c8d60b0622bfaca4
-- name: github.com/Sirupsen/logrus
-  version: c078b1e43f58d563c74cebe63c85789e76ddb627
-- name: github.com/vistarmedia/go-datadog
-  version: d05578420bfaf173df31fc00580f57b904df6222
-- name: golang.org/x/net
-  version: f315505cf3349909cdf013ea56690da34e96a451
+- name: github.com/sirupsen/logrus
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+- name: github.com/ugorji/go
+  version: 8c0409fcbb70099c748d71f714529204975f6c3f
   subpackages:
-  - context
+  - codec
+- name: golang.org/x/crypto
+  version: 9ba3862cf6a5452ae579de98f9364dd2e544844c
+  subpackages:
+  - ssh/terminal
 - name: golang.org/x/sys
-  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  version: a5054c7c1385fd50d9394475365355a87a7873ec
   subpackages:
   - unix
+  - windows
 - name: gopkg.in/cheggaaa/pb.v1
-  version: d7e6ca3010b6f084d8056847f55d7f572f180678
+  version: 657164d0228d6bebe316fdf725c69f131a50fb10
 - name: gopkg.in/go-playground/validator.v8
-  version: c193cecd124b5cc722d7ee5538e945bdb3348435
+  version: 5f1438d3fca68893a817e4a66806cea46a9e4ebf
 - name: gopkg.in/yaml.v2
-  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports: []

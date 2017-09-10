@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mopsalarm/go-pr0gramm-tags/store"
+	log "github.com/sirupsen/logrus"
 )
 
 type tagInfo struct {
