@@ -35,7 +35,7 @@ window.eval(`
       };
 
       // fix reloading issues
-      if(/\/\?/.test(decodeURIComponent(p.getLocation() || ""))) {
+      if(/\\/\\?/.test(decodeURIComponent(p.getLocation() || ""))) {
           p.navigateTo(p.getLocation(), p.NAVIGATE.FORCE);
       }
 
