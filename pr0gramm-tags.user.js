@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pr0gramm-tags
 // @namespace    http://github.net/mopsalarm/pr0gramm-tags
-// @version      1.0.0
+// @version      1.0.1
 // @description  Allow better searches
 // @author       Mopsalarm
 // @match        http://pr0gramm.com/*
