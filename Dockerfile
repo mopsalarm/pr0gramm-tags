@@ -1,4 +1,4 @@
-FROM golang:1.9.2-stretch as builder
+FROM golang:1.10-stretch as builder
 
 RUN go get github.com/Masterminds/glide/
 

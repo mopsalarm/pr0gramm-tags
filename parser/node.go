@@ -49,24 +49,22 @@ func (node *Node) EqualTo(other *Node) bool {
 }
 
 func (node *Node) LessThan(other *Node) bool {
-	quick := node.Type < other.Type || node.Query < other.Query || len(node.Children) < len(other.Children)
-	if quick {
-		return quick
+	if node.Type < other.Type || node.Query < other.Query {
+		return true
 	}
 
-	for idx, child := range node.Children {
-		if child.LessThan(other.Children[idx]) {
+	for idx := 0; idx < len(node.Children) && idx < len(other.Children); idx++ {
+		if node.Children[idx].LessThan(other.Children[idx]) {
 			return true
 		}
 	}
 
-	return false
+	return len(node.Children) < len(other.Children)
 }
 
 func (node *Node) Clone() *Node {
 	var children []*Node
 	if len(node.Children) > 0 {
-
 		for _, child := range node.Children {
 			children = append(children, child.Clone())
 		}

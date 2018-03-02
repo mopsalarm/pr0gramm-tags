@@ -112,7 +112,7 @@ func (ctx *optimizeContext) optCombineHierarchy(node *Node) *Node {
 
 	if node.Type == AND || node.Type == OR {
 		if anyNode(node.Children, ofType(node.Type)) {
-			children := []*Node{}
+			var children []*Node
 			for _, child := range node.Children {
 				if node.Type == child.Type {
 					children = append(children, child.Children...)
