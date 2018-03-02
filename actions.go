@@ -167,6 +167,12 @@ func (sa *storeActions) Search(query string, olderThan int32, shuffle bool) (res
 					// skipping posts. we need to invert the item id here, cause
 					// the search is running on negative ids internally
 					store.IteratorSkipUntil(iter, -olderThan)
+
+					// we only skipped to the item that is equal to olderThan, so we need to
+					// skip the next element.
+					if iter.HasMore() {
+						iter.Next()
+					}
 				}
 
 				// get the first 120 results
