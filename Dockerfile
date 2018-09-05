@@ -15,7 +15,7 @@ RUN go build -v -ldflags="-s -w" -o /go-pr0gramm-tags .
 
 
 FROM alpine:3.8
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates libstdc++
 EXPOSE 8080
 
 COPY --from=builder /go-pr0gramm-tags /
