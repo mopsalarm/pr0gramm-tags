@@ -1,19 +1,23 @@
-FROM golang:1.10-stretch as builder
+FROM golang:1.11-alpine3.8 as builder
 
-RUN go get github.com/Masterminds/glide/
+RUN apk add --no-cache git g++
 
-COPY glide.* src/github.com/mopsalarm/go-pr0gramm-tags/
-RUN cd src/github.com/mopsalarm/go-pr0gramm-tags/ && glide install --strip-vendor
+ENV GO111MODULE=on
 
-COPY . src/github.com/mopsalarm/go-pr0gramm-tags/
-RUN go build -v -ldflags="-s -w" -o /go-pr0gramm-tags github.com/mopsalarm/go-pr0gramm-tags
+ENV PACKAGE github.com/mopsalarm/go-pr0gramm-tags
+WORKDIR $GOPATH/src/$PACKAGE/
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN go build -v -ldflags="-s -w" -o /go-pr0gramm-tags .
 
 
-FROM debian:stretch-slim
-
-ENV GIN_MODE release
-COPY --from=builder /go-pr0gramm-tags /
-
+FROM alpine:3.8
+RUN apk add --no-cache ca-certificates
 EXPOSE 8080
+
+COPY --from=builder /go-pr0gramm-tags /
 
 ENTRYPOINT ["/go-pr0gramm-tags"]
